@@ -7,6 +7,7 @@ if (!defined('APPRUNNING')){
 
 class PermissionsModule extends Module {
 	
+	private $db;
 	private $cachePermissions = array();
 	const HAS_ALL = 0;
 	const JUST_ONE = 1;	
@@ -288,4 +289,8 @@ class PermissionsModule extends Module {
 			return(false);
 	}
 
+	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
+		parent::__construct($modulesManager);
+		$this->db = $db;
+	}
 }

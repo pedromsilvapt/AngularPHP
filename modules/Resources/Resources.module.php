@@ -9,10 +9,6 @@ class ResourcesModule extends Module {
 	private $resourcesDirectories;
 	private $resourcesFiles;
 	
-	public static function getDependencies(){
-		return(Array());
-	}
-	
 	
 	public function actionActivateResource($params, $resourceName){
 		$this->requestResource($resourceName, $params);

@@ -6,37 +6,31 @@ if (!defined('APPRUNNING')){
 
 class AuthModule extends Module {
 	
-	public function checkCredentials($username, $password){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	private $db;
+	
+	public function checkCredentials($username, $password){		
 		$query = 'SELECT ID
 				  FROM ^users
 				  WHERE username = ? and password = SHA1(CONCAT(?, salt))
 				  LIMIT 1';
 				  
-		$query = $DB->query($query, $username, $password);
+		$query = $this->db->query($query, $username, $password);
 		
-		if ($query->rowCount() == 0){
-			return(false);
-		} else {
-			return($query->fetchColumn(0));
-		}
+		if ($query->rowCount() == 0) return(false);
+		else return($query->fetchColumn(0));
 	}
 	
-	public function login($username, $password){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function login($username, $password){		
 		$userID = $this->checkCredentials($username, $password);
 		
-		if ($userID === false){
+		if ($userID === false)
 			return(false);
-		}
 		
 		$query = 'SELECT username, email
 				  FROM ^users
 				  WHERE ID = ?
 				  LIMIT 1';
-		$query = $DB->query($query, $userID);
+		$query = $$this->db->query($query, $userID);
 		$data = $query->fetch(PDO::FETCH_ASSOC);
 		
 		$_SESSION['isLoggedIn'] = true;
@@ -78,6 +72,10 @@ class AuthModule extends Module {
 			return(true);
 		}
 	}
-
+	
+	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
+		parent::__construct($modulesManager);
+		$this->db = $db;
+	}
 }
 

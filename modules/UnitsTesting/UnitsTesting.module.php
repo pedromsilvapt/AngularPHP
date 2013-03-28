@@ -11,11 +11,6 @@ class UnitsTestingModule extends Module {
 	private $exporters = array();
 	private $chainingInfo = array();
 	
-	
-	public static function getDependencies(){
-		return(array());
-	}
-	
 	private function exporterHTML($tests){
 		return print_r($tests, true);
 	}

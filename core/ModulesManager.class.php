@@ -22,6 +22,7 @@ function trimOffEnd($off, $str) {
 class ModulesManager {
 	private $appManager;
 	private $modules;
+	private $modulesDirectories;
 	private $modulesCallbacks;
 	private $callbacksModules;
 	private $lastIndex;
@@ -58,18 +59,25 @@ class ModulesManager {
 		return false;
 	}
 	
-	public function getModuleDirectory($moduleName){
-		if (empty($moduleName) || !is_string($moduleName)){
+	public function getModuleDirectory($moduleName, $suffixSlash = true){
+		if (empty($moduleName) || !is_string($moduleName) || !is_bool($suffixSlash)){
 			return(false);
 		}
+		//If there is already any cached information about this module's directory, use it
+		if (isset($this->modulesDirectories[$moduleName])) return $this->modulesDirectories[$moduleName];
+		
+		$return = false;
 		//Checks if this module uses a custom directory of his own
 		if (file_exists(Config::$dirPath.'modules\\'.$moduleName.'\\'.$moduleName.'.module.php')){
-			return(Config::$dirPath.'modules\\'.$moduleName.'\\');
+			$return = Config::$dirPath.'modules\\'.$moduleName.($suffixSlash ? '\\' : '');
 		//or if it is just a single file
 		} else if (file_exists(Config::$dirPath.'modules\\'.$moduleName.'.module.php')){
-			return(Config::$dirPath.'modules\\');
+			$return = Config::$dirPath.'modules'.($suffixSlash ? '\\' : '');
 		}
-		return(false);
+		
+		//Stores the information on cache
+		$this->modulesDirectories[$moduleName] = $return;
+		return $return;
 	}
 	
 	public function moduleExists($moduleName){
@@ -81,7 +89,7 @@ class ModulesManager {
 	}
 	
 	public function checkForDependencies($moduleType){
-		//Calls and saves the dependencias for the module
+		//Calls and saves the dependencies for the module
 		$dependencies = call_user_func(array($moduleType, 'getDependencies'));
 		//If it's not an array, exists the function
 		if (!is_array($dependencies)) return(true);
@@ -94,18 +102,30 @@ class ModulesManager {
 	}
 	
 	public function loadDependencies($moduleType, $parentCalls){
-		//Calls and saves the dependencias for the module
-		$dependencies = call_user_func(array($moduleType, 'getDependencies'));
-		//If it's not an array, exists the function
-		if (!is_array($dependencies)) return(true);
+		//Get's the directory for this module
+		$moduleDirectory = $this->getModuleDirectory($moduleType);
+		if ($moduleDirectory === false) return false;
 		
-		//Defines this module as loaded
-		$parentCalls[$moduleType] = true;
+		$moduleDFile = $moduleDirectory.$moduleType.'.dependencies.php';
 		
-		//Loops through the dependencies and checks if they are not loaded
-		foreach($dependencies as $dep)
-			if ((isset($parentCalls[$dep]) && $parentCalls[$dep]) || $this->_loadModuleAs($dep, $dep, $parentCalls) === false) return(false);
-		
+		if (file_exists($moduleDFile)){
+			//Includes the file
+			require_once($moduleDFile);
+			
+			//Calls and saves the dependencies for the module
+			$moduleClass = $moduleType.'Dependencies';
+			$dependenciesDeclarator = new $moduleClass();
+			$dependencies = $dependenciesDeclarator->getDependencies();
+			//If it's not an array, exists the function
+			if (!is_array($dependencies)) return(false);
+			
+			//Defines this module as loaded
+			$parentCalls[$moduleType] = true;
+			
+			//Loops through the dependencies and checks if they are not loaded
+			foreach($dependencies as $dep)
+				if ((isset($parentCalls[$dep]) && $parentCalls[$dep]) || $this->_loadModuleAs($dep, $dep, $parentCalls) === false) return(false);
+		}
 		
 		return(true);
 	}
@@ -122,9 +142,12 @@ class ModulesManager {
 		if (!$moduleDir){
 			return(false);
 		}
+		//If not all module's dependencies could be loaded, exits the function
+		if ($this->loadDependencies($moduleName, $parentCalls) === false) return false;
+		
 		//Rqeuires the module file
-		require_once($moduleDir.$moduleName.'.module.php');
 		require_once($moduleDir.$baseModuleName.'.module.php');
+		require_once($moduleDir.$moduleName.'.module.php');
 		
 		//Creates a Reflection object for that module
 		$moduleReflection = new ReflectionClass(ucfirst($baseModuleName).'Module');
@@ -132,18 +155,13 @@ class ModulesManager {
 		if ($moduleReflection->isSubclassOf('Module') && ($moduleName === $baseModuleName || $moduleReflection->isSubclassOf($moduleName.'Module'))){
 			$moduleType = $baseModuleName.'Module';
 			
-			//If there aren't loaded all the module's dependencies, returns false
-			if ($this->loadDependencies($moduleType, $parentCalls)){
-				//Creates the module injecting the dependencies
-				$this->modules[$moduleName] = $this->appManager->injectDependencies(array($moduleType, '__construct'));
+			//Creates the module injecting the dependencies
+			$this->modules[$moduleName] = $this->appManager->injectDependencies(array($moduleType, '__construct'));
 				
-				//Calls the callbacks that have been waiting for this module
-				$this->refreshModuleCallbacks($moduleName);
+			//Calls the callbacks that have been waiting for this module
+			$this->refreshModuleCallbacks($moduleName);
 				
-				return($this->modules[$moduleName]);
-			} else {
-				return(false);
-			}
+			return($this->modules[$moduleName]);
 		}
 		return(false);
 	}
@@ -248,9 +266,13 @@ class ModulesManager {
 	function __construct($appManager){
 		$this->appManager = $appManager;
 		$this->modules = Array();
+		$this->modulesDirectories = Array();
 		$this->callbacksModules = Array();
 		$this->modulesCallbacks = Array();
 		$this->lastIndex = 0;
+		
+		require_once(Config::$dirPath.'core\Module.class.php');
+		require_once(Config::$dirPath.'core\DependenciesDeclarator.class.php');
 		
 		$this->appManager->registerInjectionProvider('ModulesManager', $this);
 		$this->appManager->registerInjectionProvider('Modules', array($this, 'modulesInjector'));

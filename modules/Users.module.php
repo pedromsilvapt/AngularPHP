@@ -7,17 +7,13 @@ if (!defined('APPRUNNING')){
 
 class UsersModule extends Module {
 	
+	private $db;
 	private $cacheState;
 	private $cache;
 	private $users;
 	static $NULL = null;
-		
 	
-	public static function getDependencies(){
-		return(Array('Database'));
-	}
-	
-	public static function generatePassword($lenght = 9, $strenght = 0){
+	public function generatePassword($lenght = 9, $strenght = 0){
 		$chars = 'abcdefghijklmnpqrstuvwxyz';
 		
 		if ($strenght >= 1){
@@ -68,8 +64,6 @@ class UsersModule extends Module {
 
 	
 	public function getIDByUsername($username){
-		$DB = $this->modulesManager->getModule('Database');
-		
 		if (!is_string($username)){
 			return(false);
 		}
@@ -79,7 +73,7 @@ class UsersModule extends Module {
 				  FROM ^users
 				  WHERE username = ?
 				  LIMIT 1';
-		$query = $DB->query($query, $username);
+		$query = $this->db->query($query, $username);
 		
 		//If results were found
 		if ($query->rowCount() > 0){
@@ -91,9 +85,7 @@ class UsersModule extends Module {
 		}
 	}
 	
-	public function usernameAlreadyUsed($username){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function usernameAlreadyUsed($username){		
 		if (!is_string($username)){
 			return(false);
 		}
@@ -103,15 +95,13 @@ class UsersModule extends Module {
 				  FROM ^users
 				  WHERE username = ?
 				  LIMIT 1';
-		$query = $DB->query($query, $username);
+		$query = $this->db->query($query, $username);
 		
 		//Returns if any match was found
 		return $query->rowCount() > 0;
 	}
 	
-	public function emailAlreadyUsed($email, $excludeUnverified = false){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function emailAlreadyUsed($email, $excludeUnverified = false){		
 		if (!is_string($email)){
 			return(false);
 		}
@@ -128,9 +118,31 @@ class UsersModule extends Module {
 					  FROM ^users
 					  WHERE email = ?';
 		}
-		$query = $DB->query($query, $email);
+		$query = $this->db->query($query, $email);
 		
 		return $query->rowCount() > 0;
+	}
+	
+		public function createUser($username, $password, $email, $activate, $sendMail){		
+		//If the variable's types aren't correct, exits the function
+		if (!is_string($username) or !is_string($password) or !is_string($email) or !is_bool($activate) or !is_bool($sendMail))
+			return(false);
+		
+		//Checks if there is already any registered user with the same username/email.
+		$sql = $this->db->query('SELECT ID FROM ^users WHERE username = ? or email = ?', $username, $email);
+		
+		if ($sql->rowCount() > 0){
+			return(false);
+		} else {
+			
+			//Creates the user into the Database
+			$salt = Users::generatePassword(5, 1);
+			$sql = $this->db->query('INSERT INTO ^users (username, password, salt, activated, activation_code)
+							   VALUES (?, ?, ?, ?, ?)', $username, sha1($password.$salt), $salt, $email, $activate, $this->generatePassword(50, 3));
+		
+			//Returns the ID of the created user
+			return($this->db->lastInsertId());
+		}
 	}
 	
 	//  !
@@ -153,30 +165,6 @@ class UsersModule extends Module {
 				}
 			}
 			return($usersGroups);
-		}
-	}
-	
-	public function createUser($username, $password, $email, $activate, $sendMail){
-		$DB = $this->modulesManager->getModule('Database');
-		
-		//If the variable's types aren't correct, exits the function
-		if (!is_string($username) or !is_string($password) or !is_string($email) or !is_bool($activate) or !is_bool($sendMail))
-			return(false);
-		
-		//Checks if there is already any registered user with the same username/email.
-		$sql = $DB->query('SELECT ID FROM ^users WHERE username = ? or email = ?', $username, $email);
-		
-		if ($sql->rowCount() > 0){
-			return(false);
-		} else {
-			
-			//Creates the user into the Database
-			$salt = Users::generatePassword(5, 1);
-			$sql = $DB->query('INSERT INTO ^users (username, password, salt, activated, activation_code)
-							   VALUES (?, ?, ?, ?, ?)', $username, sha1($password.$salt), $salt, $email, $activate, Users::generatePassword(50, 3));
-		
-			//Returns the ID of the created user
-			return($DB->lastInsertId());
 		}
 	}
 	
@@ -309,8 +297,9 @@ class UsersModule extends Module {
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager, $cacheState = false){
+	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
 		parent::__construct($modulesManager);
+		$this->db = $db;
 		
 		$this->cacheState = $cacheState;
 		$this->cache = Array();

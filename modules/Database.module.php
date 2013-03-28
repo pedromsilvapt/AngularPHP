@@ -60,6 +60,7 @@ class DatabaseModule extends Module {
 		$this->PDO = new PDO("mysql:host=".$this->dbHost.";dbname=".$this->dbName."", $this->dbUser, $this->dbPass);
 		$this->PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
+
 }
 
 

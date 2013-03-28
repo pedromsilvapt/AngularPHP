@@ -30,10 +30,6 @@ class URIModule extends Module {
 	* @return  string  the uri
 	*/
 	
-	public static function getDependencies(){
-		return(Array());
-	}
-	
 	public function calculateURI($uri = null) {
 		if (isset($_SERVER['PATH_INFO']) && $uri === null)
 		{

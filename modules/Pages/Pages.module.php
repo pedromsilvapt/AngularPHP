@@ -9,11 +9,7 @@ class PagesModule extends Module {
 	private $pagesDirectories;
 	private $pagesFiles;
 	private $appManager;
-	
-	public static function getDependencies(){
-		return(Array());
-	}
-	
+
 	
 	public function actionRequestPage($params, $pageName, $action = null, $customParams = array()){
 		$this->requestPage($pageName, $action, array_merge($params, $customParams));
@@ -133,4 +129,5 @@ class PagesModule extends Module {
 			$routes->addAction('requestPage', array($this, 'actionRequestPage'));			
 		});
 	}
+
 }

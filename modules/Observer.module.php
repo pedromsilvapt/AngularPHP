@@ -12,10 +12,6 @@ class ObserverModule extends Module {
 		'AUTO_INDEX' => false
 	);
 	
-	public static function getDependencies(){
-		return(Array());
-	}
-	
 	public function confExists($var_name){
 		return isset($this->config[$var_name]);
 	}

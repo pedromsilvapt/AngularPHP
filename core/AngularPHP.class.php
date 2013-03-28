@@ -4,7 +4,6 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-require(Config::$dirPath.'core\Module.class.php');
 require(Config::$dirPath.'core\ModulesManager.class.php');
 require(Config::$dirPath.'modules\HelperFunctions.php');
 

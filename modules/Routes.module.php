@@ -6,6 +6,7 @@ if (!defined('APPRUNNING')){
 
 class RoutesModule extends Module {
 	
+	private $uri;
 	private $routes;
 	private $defaultRoute;
 	private $actions;
@@ -135,14 +136,12 @@ class RoutesModule extends Module {
 		return(false);
 	}
 	
-	public function matchesRoute($route){
-		$URI = $this->modulesManager->getModule('URI');
-		
+	public function matchesRoute($route){		
 		//Checks if the route exists
 		if (empty($this->routes[$route])) return(false);
 		//Quick check to make sure the route has the same size as the URL, and so can eventualy match
 		//echo $this->routes[$route]['segments']."<br />".
-		if (count($this->routes[$route]['segments']) != $URI->getSegmentsCount()) return(false);
+		if (count($this->routes[$route]['segments']) != $this->uri->getSegmentsCount()) return(false);
 		
 		//The position is the current position in the URL
 		$pos = 0;
@@ -153,9 +152,9 @@ class RoutesModule extends Module {
 			//Checks if this segment is a parameter: if yes, acceps it
 			if (substr($segment, 0, 1) == ':'){
 				//And saves it one the $params array
-				$params[substr($segment, 1)] = $URI->getSegment($pos);
+				$params[substr($segment, 1)] = $this->uri->getSegment($pos);
 			//Tests if the segment on the URL matches the segment on the route
-			} else if ($segment !== $URI->getSegment($pos)) {
+			} else if ($segment !== $this->uri->getSegment($pos)) {
 				return(false);
 			}
 			//Increases one position
@@ -206,8 +205,9 @@ class RoutesModule extends Module {
 		$this->actions[$actionName] = $actionCallback;
 	}
 	
-	public function __construct(ModulesManager $modulesManager){
+	public function __construct(ModulesManager $modulesManager, URIModule $uri){
 		parent::__construct($modulesManager);
+		$this->uri = $uri;
 		$this->routes = Array();
 		$this->defaultRoute = null;
 		$this->actions = Array();

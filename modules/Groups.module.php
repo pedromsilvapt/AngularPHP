@@ -7,14 +7,12 @@ if (!defined('APPRUNNING')){
 
 class GroupsModule extends Module {
 	
+	private $db;
+	private $users;
 	private $groups = Array();
 	private $usersGroups = Array();
 	const HAS_ALL = 0;
 	const JUST_ONE = 1;	
-	
-	public static function getDependencies(){
-		return(Array('Database', 'Users'));
-	}
 	
 	public function getGroups($forceRecache = false){
 		$DB = $this->modulesManager->getModule('Database');
@@ -288,6 +286,12 @@ class GroupsModule extends Module {
 		return(true);
 	}
 
+	public function __construct(ModulesManager $modulesManager, DatabaseModule $db, UsersModule $users){
+		parent::__construct($modulesManager);
+		$this->db = $db;
+		$this->users = $users;
+	}
+	
 	static public function editGroup($groupID, $newGroupName){
 		$DB = $this->modulesManager->getModule('Database');
 		
@@ -306,6 +310,5 @@ class GroupsModule extends Module {
 		
 		return(true);
 	}
-
 }
 

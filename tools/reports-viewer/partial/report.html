@@ -27,6 +27,20 @@
 	</div>
 </div>
 
+<div id="testOutputDialog" class="modal hide fade">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h3>Test: <i>{{outputDialog.description}}</i></h3>
+	</div>
+	<div class="modal-body">
+		<pre>{{report[outputDialog.name]['tests'][outputDialog.description].output}}</pre>
+	</div>
+	<div class="modal-footer">
+		<a href="#" data-dismiss="modal" class="btn">Close</a>
+		<a href="#" class="btn btn-primary">Save changes</a>
+	</div>
+</div>
+
 <!--Page-->
 <div ng-hide="reportExists(currentSelectedReport)">Não existe o relatório {{currentSelectedReport}}</div>
 <div ng-show="reportExists(currentSelectedReport)">
@@ -44,7 +58,7 @@
 	<table style=" margin-top: 40px;" class="table">
 		<tbody ng-repeat="item in reportArray | orderBy: number">
 			<tr ng-click="toggleSetCollapse(item.name)" class="clickable" style="height: 50px;">
-				<th colspan="2" style="font-size: 30px;  vertical-align: middle;">{{item.name}}</th>
+				<th colspan="3" style="font-size: 30px;  vertical-align: middle;">{{item.name}}</th>
 				<td style="font-size: 30px;  vertical-align: middle;" class="status passed-background clickable" ng-show="report[item.name].passed && isSetCollapsed(item.name)">Passed</td>
 				<td style="font-size: 30px;  vertical-align: middle;" class="status failed-background clickable" ng-hide="report[item.name].passed || !isSetCollapsed(item.name)">Failed</td>
 				<th ng-hide="isSetCollapsed(item.name)" class="status"></th>
@@ -52,6 +66,8 @@
 			<tr ng-hide="isSetCollapsed(item.name)" ng-repeat="subItem in item.children  | orderBy: number">
 				<td style="width: 5%; text-align: right; font-weight: bold;">{{subItem.number}}</td>
 				<td>{{subItem.name}}</td>
+				<td ng-show="!report[item.name]['tests'][subItem.name].output" class=""></td>
+				<td ng-hide="!report[item.name]['tests'][subItem.name].output" ng-click="setOutputTest(item.name, subItem.name)" data-toggle="modal" data-target="#testOutputDialog" class="clickable output-background"><i class=" icon-info-sign icon-white"> </i></td>
 				<td ng-click="setDetails(item.name, subItem.name)" data-toggle="modal" data-target="#testDetailsDialog" class="status passed-background clickable" ng-show="report[item.name]['tests'][subItem.name].passed">Passed</td>
 				<td ng-click="setDetails(item.name, subItem.name)" data-toggle="modal" data-target="#testDetailsDialog" class="status failed-background clickable" ng-hide="report[item.name]['tests'][subItem.name].passed">Failed</td>
 			</tr>

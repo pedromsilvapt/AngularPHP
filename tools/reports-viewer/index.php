@@ -25,7 +25,7 @@
 				color: #FFFFFF;
 				font-weight: 700;
 				text-align: center !important;
-				vertical-align: middle;
+				vertical-align: middle !important;
 			}
 			
 			.failed-background {
@@ -33,7 +33,16 @@
 				color: #FFFFFF;
 				font-weight: 700;
 				text-align: center !important;
-				vertical-align: middle;
+				vertical-align: middle !important;
+			}
+			
+			.output-background {
+				background-color: #0088FF;
+				color: #FFFFFF;
+				font-weight: 700;
+				width: 20px !important;
+				text-align: center !important;
+				vertical-align: middle !important;
 			}
 			
 			.clickable {

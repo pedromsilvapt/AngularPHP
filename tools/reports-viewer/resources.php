@@ -93,12 +93,26 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 			$debug['route'] = 2;		
 		})->when('seg1', 'seg4', ':seg3', ':seg5')->doThis(function($seg3, $seg5) use ($debug){
 			$debug['route'] = 3;
+		})->set('link1')->when('hard', ':var1')->doThis(function($var1){
+			
+		})->set('link2')->when('hard', ':var1', ':var2', 'hard2', 'hard3')->doThis(function($var1){
+			
+		})->set('link3')->when(':var1', ':var2', 'hard')->doThis(function($var1){
+			
 		})->go();
 		
 		
 		$u->it('should detect the correct route', function() use ($u, $r, $debug){
-			echo $debug['route'];
+			//echo $debug['route'];
 			$u->expect($debug['route'])->toBe(1);
+		});
+		$u->it('should output correct links', function() use ($u, $r){
+			$u->expect($r->linkTo('link1', array('var1' => 2)))->toBe('/hard/2');
+			$u->expect($r->linkTo('link2', array('var1' => 2, 'var2' => 1)))->toBe('/hard/2/1/hard2/hard3');
+			$u->expect($r->linkTo('link2', array('var1' => 2)))->toBe('/hard/2');
+			$u->expect($r->linkTo('link2'))->toBe('/hard');
+			$u->expect($r->linkTo('link3', array('var1' => 2, 'var2' => 1)))->toBe('/2/1/hard');
+			$u->expect($r->linkTo('link3'))->toBe('');
 		});
 	});
 	

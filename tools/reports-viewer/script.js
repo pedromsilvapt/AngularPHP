@@ -120,6 +120,7 @@ function ReportController($scope, $resource, $routeParams){
 	$scope.report;
 	$scope.reportUI = {};
 	$scope.details = {};
+	$scope.outputDialog = {};
 	$scope.reportArray = [];
 	
 	$scope.toggleSetCollapse = function(setName){
@@ -132,6 +133,10 @@ function ReportController($scope, $resource, $routeParams){
 		if (!(setName in $scope.reportUI)) $scope.reportUI[setName] = {collapse: false};
 		
 		return $scope.reportUI[setName].collapse;
+	}
+	
+	$scope.setOutputTest = function(setName, description){
+		$scope.outputDialog = {name: setName, description: description};
 	}
 	
 	$scope.setDetails = function(setName, description){

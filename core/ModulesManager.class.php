@@ -39,7 +39,7 @@ class ModulesManager {
 			//The checks if this callback has all modules it needs
 			if (!count($this->callbacksModules[$index]['missing'])){
 				//If yes, call's the defined callback
-				$this->appManager->injectDependencies($this->callbacksModules[$index]['callback']);
+				$this->appManager->getDependenciesInjector()->injectDependencies($this->callbacksModules[$index]['callback']);
 				//And removes it completly from the list
 				unset($this->callbacksModules[$index]);
 			}
@@ -49,7 +49,7 @@ class ModulesManager {
 		unset($this->modulesCallbacks[$moduleName]);
 	}
 		
-	public function modulesInjector($classType, $parameterReflection){
+	public function modulesInjector($classType, $varName, $index, $parameterReflection){
 		if (endsWith($classType, 'Module') && $classType != 'Module'){
 			$moduleName = trimOffEnd('Module', $classType);
 			
@@ -129,50 +129,56 @@ class ModulesManager {
 		
 		return(true);
 	}
-		
 	
-	private function _loadModuleAs($moduleName, $baseModuleName, $parentCalls){
+	
+	private function _loadModuleAs($moduleName, $baseModuleName, $parentCalls, $args = array()){
 		//If the module is already loaded
 		if ($this->isModuleLoaded($moduleName)){
 			return(false);
 		}
 		//Gets the module's directory
-		$moduleDir = $this->getModuleDirectory($baseModuleName);
+		$moduleDir = $this->getModuleDirectory($moduleName);
 		//If there is not such module, exits the function
 		if (!$moduleDir){
 			return(false);
 		}
+		$baseModuleDir = $this->getModuleDirectory($baseModuleName);
 		//If not all module's dependencies could be loaded, exits the function
 		if ($this->loadDependencies($moduleName, $parentCalls) === false) return false;
 		
 		//Rqeuires the module file
-		require_once($moduleDir.$baseModuleName.'.module.php');
+		if ($baseModuleDir !== false) require_once($moduleDir.$baseModuleName.'.module.php');
 		require_once($moduleDir.$moduleName.'.module.php');
 		
 		//Creates a Reflection object for that module
-		$moduleReflection = new ReflectionClass(ucfirst($baseModuleName).'Module');
+		$moduleReflection = new ReflectionClass(ucfirst($moduleName).'Module');
 		//And checks if it inherits the Module class
-		if ($moduleReflection->isSubclassOf('Module') && ($moduleName === $baseModuleName || $moduleReflection->isSubclassOf($moduleName.'Module'))){
-			$moduleType = $baseModuleName.'Module';
+		if ($moduleReflection->isSubclassOf('Module') && ($moduleName === $baseModuleName || $baseModuleDir === false || $moduleReflection->isSubclassOf($baseModuleName.'Module'))){
+			$moduleType = $moduleName.'Module';
 			
 			//Creates the module injecting the dependencies
-			$this->modules[$moduleName] = $this->appManager->injectDependencies(array($moduleType, '__construct'));
+			$this->modules[$baseModuleName] = $this->appManager->getDependenciesInjector()->injectDependenciesArgsArray(array($moduleType, '__construct'), $args);
 				
 			//Calls the callbacks that have been waiting for this module
-			$this->refreshModuleCallbacks($moduleName);
+			$this->refreshModuleCallbacks($baseModuleName);
 				
-			return($this->modules[$moduleName]);
+			return($this->modules[$baseModuleName]);
 		}
 		return(false);
 	}
 	
 	public function loadModuleAs($moduleName, $baseModuleName){
-		return call_user_func(array($this, '_loadModuleAs'), $moduleName, $baseModuleName, array($moduleName => true));
+		$args = array();
+		for($i = 2; $i < func_num_args(); $i++) $args[] = func_get_arg($i);
+		
+		return call_user_func(array($this, '_loadModuleAs'), $moduleName, $baseModuleName, array($moduleName => true), $args);
 	}
 	
 	public function loadModule($moduleName){
-		return call_user_func(array($this, '_loadModuleAs'), $moduleName, $moduleName, array($moduleName => true));
-		//return call_user_func_array(array($this, '_loadModuleAs'), array_merge(array($moduleName), func_get_args()), array($moduleName => true));
+		$args = array();
+		for($i = 1; $i < func_num_args(); $i++) $args[] = func_get_arg($i);
+		
+		return call_user_func(array($this, '_loadModuleAs'), $moduleName, $moduleName, array($moduleName => true), $args);
 	}
 	
 	public function getModule($moduleName, $autoload = false){
@@ -234,7 +240,7 @@ class ModulesManager {
 			$this->lastIndex++;
 		} else {
 			//Otherwise, if all modules are loaded, just calls the callback
-			$this->appManager->injectDependencies($callback);
+			$this->appManager->getDependenciesInjector()->injectDependencies($callback);
 		}
 	}
 	
@@ -248,7 +254,7 @@ class ModulesManager {
 			if (!$this->isModuleLoaded($module)) return;
 		}
 		
-		return $this->appManager->injectDependencies($callback);
+		return $this->appManager->getDependenciesInjector()->injectDependencies($callback);
 	}
 	
 	public function ifNotLoaded($modules, $callback){
@@ -260,7 +266,7 @@ class ModulesManager {
 		foreach($modules as $module)
 			if ($this->isModuleLoaded($module)) return;
 		
-		return $this->appManager->injectDependencies($callback);
+		return $this->appManager->getDependenciesInjector()->injectDependencies($callback);
 	}
 	
 	function __construct($appManager){
@@ -274,7 +280,7 @@ class ModulesManager {
 		require_once(Config::$dirPath.'core\Module.class.php');
 		require_once(Config::$dirPath.'core\DependenciesDeclarator.class.php');
 		
-		$this->appManager->registerInjectionProvider('ModulesManager', $this);
-		$this->appManager->registerInjectionProvider('Modules', array($this, 'modulesInjector'));
+		$this->appManager->getDependenciesInjector()->registerInjectionProvider('ModulesManager', $this);
+		$this->appManager->getDependenciesInjector()->registerInjectionProvider('Modules', array($this, 'modulesInjector'));
 	}
 }

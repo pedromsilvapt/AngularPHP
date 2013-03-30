@@ -89,7 +89,7 @@ class ResourcesModule extends Module {
 				$actionParams[$key] = $value;
 			
 			//Creates a new object of the resource and passes the parameters
-			$resource = $this->appManager->injectDependencies(array($resourceType, '__construct'), array(
+			$resource = $this->appManager->getDependenciesInjector()->injectDependencies(array($resourceType, '__construct'), array(
 				'requestMethod' => $_SERVER['REQUEST_METHOD'],
 				'globalParams' => $globalParams,
 				'actionParams' => $actionParams)

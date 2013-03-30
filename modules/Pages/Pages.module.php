@@ -92,17 +92,17 @@ class PagesModule extends Module {
 			);
 			
 			//Creates a new object of the resource and passes the parameters
-			$page = $this->appManager->injectDependencies(array($pageType, '__construct'), $arr);
+			$page = $this->appManager->getDependenciesInjector()->injectDependencies(array($pageType, '__construct'), $arr);
 			//If the page can be shown
-			if ($this->appManager->injectDependencies(array($page, 'canBeShown'), $arr)){
+			if ($page->canBeShown()){
 				//Executes the default functions
-				$this->appManager->injectDependencies(array($page, 'head'), $arr);
+				$page->head();
 				//If any action has been defined, executes the action function and such action exists
 				if (method_exists($page, $action.'Action') && $action != null && $action != '')
-					$this->appManager->injectDependencies(array($page, $action.'Action'), $arr);
+					call_user_func(array($page, $action'Action'));
 				else
-					$this->appManager->injectDependencies(array($page, 'body'), $arr);
-				$this->appManager->injectDependencies(array($page, 'footer'), $arr);
+					$page->body();
+				$page->footer();
 			}
 			return($page);
 		}

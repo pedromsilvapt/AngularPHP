@@ -105,7 +105,7 @@ class DependencyInjection {
 	}
 	
 	public function injectDependencies($function, $customProviders = array(), $overrideDefaults = false){
-		return $this->injectDependenciesArgsArray($function, array(), $customProviders, $overrideDefaults()S);
+		return $this->injectDependenciesArgsArray($function, array(), $customProviders, $overrideDefaults);
 	}
 	
 	public function injectDependenciesArgs($function){

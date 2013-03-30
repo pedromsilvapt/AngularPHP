@@ -53,7 +53,7 @@ class DatabaseModule extends Module {
 		return $this->PDO;
 	}
 
-	public function __construct($modulesManager, $dbHost, $dbUser, $dbPass, $dbName, $dbPrefix){
+	public function __construct(ModulesManager $modulesManager, $dbHost, $dbUser, $dbPass, $dbName, $dbPrefix){
 		parent::__construct($modulesManager);
 		list(, $this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPrefix) = func_get_args();
 		

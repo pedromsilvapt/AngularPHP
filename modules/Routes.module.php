@@ -50,6 +50,13 @@ class RoutesModule extends Module {
 	}
 	
 	
+	public function set($setName){
+		if (!is_string($setName)) return $this;
+		
+		$this->chainingInfo['setName'] = $setName;
+		return $this;
+	}
+	
 	public function when(){
 		//Get's the number of arguments and the argument's array of this function
 		$numargs = func_num_args();
@@ -67,7 +74,7 @@ class RoutesModule extends Module {
 			}
 		}
 		//If there are more than zero segments
-		if ($count > 0){
+		if ($count > 0 && (!isset($this->chainingInfo['setName']))){
 			//Join's them with a /
 			$gluedSegments = implode('/', $segments);
 			//And then checks if there is not any route with the same path
@@ -76,7 +83,10 @@ class RoutesModule extends Module {
 			}
 			
 			//For chaining purposes, set's the current route to this one
-			$this->currentRoute = $gluedSegments;
+			$this->chainingInfo['currentRoute'] = $gluedSegments;
+			$this->chainingInfo['setName'] = $gluedSegments;
+		} else if ($count > 0){
+			$this->routes[$this->chainingInfo['setName']] = Array('segments' => $segments);
 		}
 		
 		//For chaining purposes, returns the object again
@@ -85,20 +95,24 @@ class RoutesModule extends Module {
 	
 	public function doThis($actions){
 		//Does some parameters validations
-		if ((!is_array($actions) && !is_callable($actions)) || $this->currentRoute == '' || empty($this->routes[$this->currentRoute])){
-			return(false);
+		if ((!is_array($actions) && !is_callable($actions)) || ($this->chainingInfo['currentRoute'] == '' && !isset($this->chainingInfo['setName']))){
+			return false;
+		}
+		if (!isset($this->routes[$this->chainingInfo['currentRoute']]) && !isset($this->routes[$this->chainingInfo['setName']])){
+			return false;
 		}
 		
 		if (is_array($actions)){
 			//Adds the actions to the actions array of the selected route
-			$this->routes[$this->currentRoute]['actions'] = $actions;
+			$this->routes[$this->chainingInfo['setName']]['actions'] = $actions;
 		} else {
 			//The user used a shortcut for the default-defined action function
-			$this->routes[$this->currentRoute]['actions'] = Array('executeFunction' => $actions);
+			$this->routes[$this->chainingInfo['setName']]['actions'] = array('executeFunction' => $actions);
 		}
 		
 		//Clears the current selected chaining route
-		$this->currentRoute = '';
+		$this->chainingInfo['currentRoute'] = '';
+		$this->chainingInfo['setName'] = '';
 		
 		return($this);
 	}
@@ -121,6 +135,27 @@ class RoutesModule extends Module {
 		$this->currentRoute = '';
 		
 		return($this);
+	}
+	
+	public function linkTo($routeName, $args = array()){
+		if (!isset($this->routes[$routeName])) return false;
+		if (!is_array($args)) return false;
+		
+		$link = '';
+		
+		foreach ($this->routes[$routeName]['segments'] as $segment){
+			//Checks if this segment is a parameter: if yes, acceps it
+			if (substr($segment, 0, 1) == ':'){
+				if (isset($args[substr($segment, 1)])){
+					$link .= '/'.$args[substr($segment, 1)];
+				} else break;
+			//Tests if the segment on the URL matches the segment on the route
+			} else  {
+				$link .= '/'.$segment;
+			}
+		}
+		
+		return $link;
 	}
 	
 	public function match(){

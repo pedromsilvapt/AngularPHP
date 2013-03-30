@@ -6,6 +6,8 @@ if (!defined('APPRUNNING')){
 
 class UnitsTestingModule extends Module {
 	
+	private $_interceptOutput = true;
+	private $_showTrace = false;
 	private $tests = array();
 	private $testsResults = array();	
 	private $exporters = array();
@@ -73,6 +75,16 @@ class UnitsTestingModule extends Module {
 	}
 	
 	
+	public function interceptOutput($newVal = null){
+		if ($newVal === null) return $this->_interceptOutput;
+		else if (is_bool($newVal)) $this->_interceptOutput = $newVal;
+	}
+	
+	public function showTrace($newVal = null){
+		if ($newVal === null) return $this->_showTrace;
+		else if (is_bool($newVal)) $this->_showTrace = $newVal;
+	}
+	
 	public function exporterExists($name){
 		return isset($this->exporters[$name]);
 	}
@@ -110,7 +122,31 @@ class UnitsTestingModule extends Module {
 		$this->tests[$this->chainingInfo['currentSet']]['tests'][$description] = $callable;
 		$this->chainingInfo['currentTest'] = $description;
 		
-		call_user_func($callable);
+		//Stops anything from being printed.
+		ob_start();
+
+		set_exception_handler(function($exception){
+			echo 'Uncaught exception: '.$exception->getMessage().' in '.$exception->getFile().' line '.$exception->getLine().'\n';
+			if ($this->showTrace()){
+				echo "Trace: ".$exception->getTraceAsString()."\n";
+			}
+		});
+		
+		try {
+			call_user_func($callable);
+		} catch (Exception $exception) {
+			echo 'Uncaught exception: '.$exception->getMessage().' in '.$exception->getFile().' line '.$exception->getLine()." \n";
+			if ($this->showTrace()){
+				echo "Trace: ".$exception->getTraceAsString()."\n";
+			}
+		}
+		
+		//Gets the output
+		$output = ob_get_clean();
+		//Stores the output
+		$this->testsResults[$this->chainingInfo['runName']][$this->chainingInfo['currentSet']]['tests'][$description]['output'] = $output;
+		//If it is needed to print it anyway, does it
+		if (!$this->interceptOutput()) echo $output;
 		
 		return $this;
 	}
@@ -158,7 +194,10 @@ class UnitsTestingModule extends Module {
 			
 			$this->chainingInfo['runName'] = $name;
 			$this->chainingInfo['currentSet'] = $set;
+			
+			//Executes the tests
 			call_user_func($this->tests[$set]['callback'], $this);
+			
 			$this->resetChainingInfo();
 		}
 	}

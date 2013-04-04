@@ -1,11 +1,11 @@
 <?php
-
+namespace AngularPHP\Modules\Database;
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class DatabaseModule extends Module {
+class Database extends \AngularPHP\Module {
 	
 	public $PDO;
 	private $dbHost;
@@ -53,7 +53,7 @@ class DatabaseModule extends Module {
 		return $this->PDO;
 	}
 
-	public function __construct(ModulesManager $modulesManager, $dbHost, $dbUser, $dbPass, $dbName, $dbPrefix){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, $dbHost, $dbUser, $dbPass, $dbName, $dbPrefix){
 		parent::__construct($modulesManager);
 		list(, $this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPrefix) = func_get_args();
 		

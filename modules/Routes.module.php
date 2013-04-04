@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Routes;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class RoutesModule extends Module {
+class Routes extends \AngularPHP\Module {
 	
 	private $uri;
 	private $routes;
@@ -240,7 +242,7 @@ class RoutesModule extends Module {
 		$this->actions[$actionName] = $actionCallback;
 	}
 	
-	public function __construct(ModulesManager $modulesManager, URIModule $uri){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\URI\URI $uri){
 		parent::__construct($modulesManager);
 		$this->uri = $uri;
 		$this->routes = Array();
@@ -256,5 +258,3 @@ class RoutesModule extends Module {
 		$this->addAction('printParams', array($this, 'actionPrintParams'));
 	}
 }
-
-?>

@@ -1,11 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Users;
 
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class UsersModule extends Module {
+class Users extends \AngularPHP\Module {
 	
 	private $db;
 	private $cacheState;
@@ -168,14 +169,12 @@ class UsersModule extends Module {
 		}
 	}
 	
-	public function userExists($userID){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function userExists($userID){		
 		if (!is_integer($userID)){
 			return(false);
 		}
 		
-		$sql = $DB->query('SELECT username
+		$sql = $this->db->query('SELECT username
 						   FROM ^users
 						   WHERE ID = ?', $userID);
 		
@@ -297,7 +296,7 @@ class UsersModule extends Module {
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db){
 		parent::__construct($modulesManager);
 		$this->db = $db;
 		

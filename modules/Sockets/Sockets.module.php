@@ -1,11 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Sockets;
 
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class SocketsModule extends Module {
+class Sockets extends \AngularPHP\Module {
 	private $isServerListening = false;
 	
 	private $socketsList = array();
@@ -38,7 +39,7 @@ class SocketsModule extends Module {
 		return $socketsList[$socketName];
 	}
 	
-	public function __construct(ModulesManager $modulesManager, AngularPHP $appManager){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\AngularPHP $appManager){
 		parent::__construct($modulesManager);
 		$this->appManager = $appManager;
 		

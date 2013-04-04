@@ -1,11 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Groups;
 
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class GroupsModule extends Module {
+class Groups extends \AngularPHP\Module {
 	
 	private $db;
 	private $users;
@@ -286,7 +287,7 @@ class GroupsModule extends Module {
 		return(true);
 	}
 
-	public function __construct(ModulesManager $modulesManager, DatabaseModule $db, UsersModule $users){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db, \AngularPHP\Modules\Users\Users $users){
 		parent::__construct($modulesManager);
 		$this->db = $db;
 		$this->users = $users;

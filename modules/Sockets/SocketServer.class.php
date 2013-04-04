@@ -100,6 +100,11 @@ class SocketServer {
 		return $this;
 	}
 	
+	public function onException($callback){
+		$this->registerOn('default', 'message', $callback);
+		return $this;
+	}
+	
 	public function onHTTP($callback){
 		$this->registerOn('default', 'http', $callback);
 		return $this;
@@ -122,42 +127,65 @@ class SocketServer {
 	}
 	
 	public function listen($timeout, $listeningAddress = null, $listeningPort = null){
+		//If no address and/or port are defined, returns false
 		if (($this->listeningAddress === null && $listeningAddress === null)
 			|| ($this->listeningPort === null && $listeningPort === null)) return false;
 			
+		//If some of the arguments are null, use the defined properties in the class
 		if ($listeningAddress === null) $listeningAddress = $this->listeningAddress;
 		if ($listeningPort === null) $listeningPort = $this->listeningPort;
 		
-		
+		//Starts the socket server
 		$this->isServerListening = true;
 		$this->socket = stream_socket_server('tcp://'.$listeningAddress.':'.$listeningPort.'', $errno, $err) or die($err);
 		$this->connections = array($this->socket);
 		
-		$this->receiveStream($timeout);
+		//Encapsulates the whole code into a try 'n catch, to make sure the script does not stops
+		//Because of some uncaught exception
+		try {
+			//Calls the function to listen for the incomming messages
+			$this->receiveStream($timeout);
+		} catch (Exception $e) {
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
 		
+		//Stops the server
 		$this->isServerListening = false;
 		
 		return $this;
 	}
 	
 	public function persist($timeoutEach, $timeoutGlobal, $listeningAddress = null, $listeningPort = null){
+		//If no address and/or port are defined, returns false
 		if (($this->listeningAddress === null && $listeningAddress === null)
 			|| ($this->listeningPort === null && $listeningPort === null)) return false;
+		//If the type verification fails, returns false
 		if (!is_integer($timeoutEach) || !is_integer($timeoutGlobal)) return false;
-		
+
+		//If some of the arguments are null, use the defined properties in the class
 		if ($listeningAddress === null) $listeningAddress = $this->listeningAddress;
 		if ($listeningPort === null) $listeningPort = $this->listeningPort;
 		
+		//Starts the socket server
 		$this->isServerListening = true;
 		$this->socket = stream_socket_server('tcp://'.$listeningAddress.':'.$listeningPort.'', $errno, $err) or die($err);
 		$this->connections = array($this->socket);
 		
+		//Persists the server, so that it listens to connections indefinitely
 		$i = 0;
 		while($this->isServerListening && $i < $timeoutGlobal){
-			$this->receiveStream($timeoutEach);
-			$i++;
+			//Encapsulates the whole code into a try 'n catch, to make sure the script does not stops
+			//Because of some uncaught exception
+			try {
+				//Calls the function to listen for the incomming messages
+				$this->receiveStream($timeoutEach);
+				$i++;
+			} catch (Exception $e) {
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			}
 		}
 		
+		//Stops the server
 		$this->isServerListening = false;
 		
 		return $this;

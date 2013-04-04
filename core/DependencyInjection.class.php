@@ -1,4 +1,6 @@
 <?php
+namespace AngularPHP;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
@@ -18,16 +20,16 @@ class DependencyInjection {
 	* @param ReflectionParameter $reflectionParameter
 	* @return string|null
 	*/
-	public function resolveParameterClassName(ReflectionParameter $reflectionParameter) {
+	public function resolveParameterClassName(\ReflectionParameter $reflectionParameter) {
 		if ($reflectionParameter->isArray())
 			return null;
 		 
 		try {
 			// first try it on the normal way if the class is loaded then everything should go ok
-			if($reflectionParameter->getClass()) 
+			if($reflectionParameter->getClass())
 				return $reflectionParameter->getClass()->name;
 		// if the class isnt loaded it throws an exception
-		} catch (Exception $exception) {
+		} catch (\Exception $exception) {
 			// try to resolve it the ugly way by parsing the error message
 			$parts = explode(' ', $exception->getMessage(), 3);
 			return $parts[1];
@@ -57,7 +59,7 @@ class DependencyInjection {
 	
 		//If it's just a function
 		if (is_string($function) || (is_callable($function) && !is_array($function))){
-			$methodR = new ReflectionFunction($function);
+			$methodR = new \ReflectionFunction($function);
 		//Or is a class method
 		} elseif (is_array($function)){
 			//If the array does not comply with the rules for a callable
@@ -68,7 +70,7 @@ class DependencyInjection {
 			//$classReflection = new ReflectionClass($function[0]);
 			//Checks if it's supposed to inject on a constructor or on some ordinary method
 			//if (is_string($function[0]) && $function[1] === '__construct') $methodR = $classReflection->getConstructor();
-			$methodR = new ReflectionMethod($function[0], $function[1]);
+			$methodR = new \ReflectionMethod($function[0], $function[1]);
 		} else return false;
 		
 		return array('methodReflection' => $methodR, 'classReflection' => $classReflection);
@@ -82,7 +84,7 @@ class DependencyInjection {
 		} elseif (is_array($function)){
 			//If it's a constructor, creates the object and returns the object itself.
 			if (is_string($function[0]) && $function[1] == '__construct'){
-				$classReflection = new ReflectionClass($function[0]);
+				$classReflection = new \ReflectionClass($function[0]);
 				return $classReflection->newInstanceArgs($params);
 			} else {
 				//Or if it's an ordinary method, calls it and returns the value

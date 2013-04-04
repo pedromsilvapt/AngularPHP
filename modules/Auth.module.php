@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Auth;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class AuthModule extends Module {
+class Auth extends \AngularPHP\Module {
 	
 	private $db;
 	
@@ -73,7 +75,7 @@ class AuthModule extends Module {
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db){
 		parent::__construct($modulesManager);
 		$this->db = $db;
 	}

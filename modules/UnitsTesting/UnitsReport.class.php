@@ -1,4 +1,6 @@
 <?php
+namespace AngularPHP\Modules\UnitsTesting;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;

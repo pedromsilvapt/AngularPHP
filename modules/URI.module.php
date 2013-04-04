@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\URI;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class URIModule extends Module {
+class URI extends \AngularPHP\Module {
 	
 	private $uri;
 	private $segments;
@@ -133,7 +135,7 @@ class URIModule extends Module {
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager, $uri = null){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, $uri = null){
 		parent::__construct($modulesManager);
 		$this->calculateURI($uri);
 	}

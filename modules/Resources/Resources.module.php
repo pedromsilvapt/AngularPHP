@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Resources;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class ResourcesModule extends Module {
+class Resources extends \AngularPHP\Module {
 	
 	private $resourcesDirectories;
 	private $resourcesFiles;
@@ -78,7 +80,7 @@ class ResourcesModule extends Module {
 		require_once($directoryPath.'\\'.ucfirst($resourceName).'.resource.php');
 		
 		//Creates a reflection class to check on for the resource
-		$resourceReflection = new ReflectionClass(ucfirst($resourceName).'Resource');
+		$resourceReflection = new \ReflectionClass(ucfirst($resourceName).'Resource');
 		if ($resourceReflection->isSubclassOf('DefaultResource')){
 			//Creates a string with the name of the resource's class
 			$resourceType = $resourceName.'Resource';
@@ -100,7 +102,7 @@ class ResourcesModule extends Module {
 		return(false);
 	}
 	
-	public function __construct(ModulesManager $modulesManager, AngularPHP $appManager){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\AngularPHP $appManager){
 		parent::__construct($modulesManager);
 		$this->appManager = $appManager;
 		
@@ -115,9 +117,9 @@ class ResourcesModule extends Module {
 		$this->registerResourcesDirectory($modulesManager->getModuleDirectory('Resources').'resources\\');
 		
 		//Registers a callback for when Routes is loaded
-		$this->modulesManager->when('Routes', function(RoutesModule $Routes){
+		$this->modulesManager->when('Routes', function(AngularPHP\Modules\Routes\Routes $routes){
 			//Registers the action on routes for 
-			$Routes->addAction('activateResource', array($this, 'actionActivateResource'));			
+			$routes->addAction('activateResource', array($this, 'actionActivateResource'));			
 		});
 	}
 }

@@ -1,11 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Permissions;
 
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class PermissionsModule extends Module {
+class Permissions extends \AngularPHP\Module {
 	
 	private $db;
 	private $cachePermissions = array();
@@ -21,9 +22,7 @@ class PermissionsModule extends Module {
 		$this->cachePermissions = array();
 	}
 	
-	public function addPermissionToEntity($entityType, $entitiesID, $permissionsTypes, $forceRecache = false){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function addPermissionToEntity($entityType, $entitiesID, $permissionsTypes, $forceRecache = false){		
 		//Checks the functions params
 		if (is_integer($entitiesID))
 			$entitiesID = array($entitiesID);
@@ -65,15 +64,13 @@ class PermissionsModule extends Module {
 					$this->cachePermissions[$entitiesID][$id][$permissionType] = true;
 				}
 			}
-			$query = call_user_func_array(array($DB, 'query'), array_merge(array($sql), $queryParams));
+			$query = call_user_func_array(array($this->db, 'query'), array_merge(array($sql), $queryParams));
 		}
 		
 		return(true);
 	}
 	
-	public function removePermissionsToEntity($entityType, $entitiesID, $permissionsList, $forceRecache = false){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function removePermissionsToEntity($entityType, $entitiesID, $permissionsList, $forceRecache = false){		
 		//Checks the functions params
 		if (!is_string($entitiesType) || !is_bool($forceRecache))
 			return false;
@@ -111,16 +108,14 @@ class PermissionsModule extends Module {
 				
 				$query = 'DELETE FROM ^permissions
 						  WHERE ID_GROUP = ? and permission_type IN (?)';
-				$query = $DB->query($query, $groupID, implode(',', $removingPermissions));
+				$query = $this->db->query($query, $groupID, implode(',', $removingPermissions));
 			}
 		}
 		
 		return(true);
 	}
 	
-	public function getPermissions($entitiesType, $entitiesID, $permissionsList, $forceRecache = false){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function getPermissions($entitiesType, $entitiesID, $permissionsList, $forceRecache = false){		
 		//Checks the function params
 		if (((!is_integer($entitiesID) && !is_array($entitiesID))) || !is_bool($forceRecache))
 			return(false);
@@ -165,7 +160,7 @@ class PermissionsModule extends Module {
 					  FROM ^permissions
 					  WHERE ID_ENTITY IN ("'.implode('","', $entitiesID).'") and permission_type IN ("'.implode('","', $unknownPermissions).' and entity_type = ?")
 					  ORDER BY permission_type ASC';
-			$query = $DB->query($query, $entitiesType);
+			$query = $this->db->query($query, $entitiesType);
 			$permissions = Array();
 			$permissionsByEntity = Array();
 			
@@ -202,9 +197,7 @@ class PermissionsModule extends Module {
 		return($returnedPermissions);
 	}
 	
-	public function getAllPermissions($entityType, $entityID, $forceRecache = false){
-		$DB = $this->modulesManager->getModule('Database');
-		
+	public function getAllPermissions($entityType, $entityID, $forceRecache = false){		
 		if (!is_integer($entityID))
 			return false;
 		
@@ -222,7 +215,7 @@ class PermissionsModule extends Module {
 				  FROM ^permissions
 				  WHERE ID_ENTITY = ? and entity_type = ?
 				  ORDER BY permission_type ASC';
-		$query = $DB->query($query, $entityID, $entityType);
+		$query = $this->db->query($query, $entityID, $entityType);
 		
 		//Get's all the permissions on cache. We will use it later
 		if (isset($this->cachePermissions[$entityType][$entityID]))
@@ -255,7 +248,7 @@ class PermissionsModule extends Module {
 
 	public function entityHasPermissions($entityType, $entityID, $permissionsList, $flags = 0, $forceRecache = false){
 		//Checks the parameter consistency
-		if ($flags != PermissionsModule::HAS_ALL and $flags != PermissionsModule::JUST_ONE)
+		if ($flags != self::HAS_ALL and $flags != self::JUST_ONE)
 			return(false);
 		
 		if (is_string($permissionsList))
@@ -269,27 +262,27 @@ class PermissionsModule extends Module {
 		//Iterates through each of the permissions
 		foreach ($permissionsList as $permissionType){
 			//If one of the permissions in the list isn't a string and they must be all true
-			if (!is_string($permissionType) and $flags == Groups::HAS_ALL){
+			if (!is_string($permissionType) and $flags == self::HAS_ALL){
 				return(false);
 			//Else, the permission is a valid string
 			} else {
 				//It is true and there is only need to be one true
-				if ($perms[$permissionType] == true and $flags == Groups::JUST_ONE){
+				if ($perms[$permissionType] == true and $flags == self::JUST_ONE){
 					return(true);
 				//Or it is false and they must be all true
-				} elseif ($perms[$permissionType] == false and $flags == Groups::HAS_ALL) {
+				} elseif ($perms[$permissionType] == false and $flags == self::HAS_ALL) {
 					return(false);
 				}
 			}
 		}
 		
-		if ($flags == Groups::HAS_ALL)
+		if ($flags == self::HAS_ALL)
 			return(true);
-		elseif ($flags == Groups::JUST_ONE)
+		elseif ($flags == self::JUST_ONE)
 			return(false);
 	}
 
-	public function __construct(ModulesManager $modulesManager, DatabaseModule $db){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db){
 		parent::__construct($modulesManager);
 		$this->db = $db;
 	}

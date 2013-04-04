@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Observer;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class ObserverModule extends Module {
+class Observer extends \AngularPHP\Module {
 	
 	private $observing;
 	private $config = array(
@@ -128,15 +130,14 @@ class ObserverModule extends Module {
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager){
 		parent::__construct($modulesManager);
 		$this->observing = Array();
 		
 		//Adds the main actions
-		$this->modulesManager->when('Routes', function(RoutesModule $Routes){
+		$this->modulesManager->when('Routes', function(\AngularPHP\Modules\Routes\Routes $Routes){
 			$Routes->addAction('notify', array($this, 'actionNotify'));
 		});
 	}
-}
 
-?>
+}

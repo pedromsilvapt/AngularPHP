@@ -1,11 +1,14 @@
 <?php
+namespace AngularPHP;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-require(Config::$dirPath.'core\ModulesManager.class.php');
+require(Config::$dirPath.'core\Decorator.class.php');
 require(Config::$dirPath.'core\DependencyInjection.class.php');
+require(Config::$dirPath.'core\ModulesManager.class.php');
 require(Config::$dirPath.'modules\HelperFunctions.php');
 
 class AngularPHP {

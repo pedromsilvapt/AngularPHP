@@ -1,10 +1,11 @@
 <?php
+namespace AngularPHP\Modules\UnitsTesting;
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class UnitsTestingModule extends Module {
+class UnitsTesting extends \AngularPHP\Module {
 	
 	private $_interceptOutput = true;
 	private $_showTrace = false;
@@ -208,7 +209,7 @@ class UnitsTestingModule extends Module {
 		return call_user_func($this->exporters[$formatter], $this->testsResults[$name]);
 	}
 	
-	public function __construct(ModulesManager $modulesManager){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager){
 		parent::__construct($modulesManager);
 		
 		require_once($modulesManager->getModuleDirectory('UnitsTesting').'UnitsReport.class.php');
@@ -217,5 +218,5 @@ class UnitsTestingModule extends Module {
 		$this->registerExporter('json', array($this, 'exporterJSON'));
 		$this->registerExporter('object', array($this, 'exporterObject'));
 	}
+	
 }
-

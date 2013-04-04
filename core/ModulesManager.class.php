@@ -1,4 +1,6 @@
 <?php
+namespace AngularPHP;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
@@ -12,12 +14,20 @@ function endsWith($str, $sub) {
     return(substr($str, strlen($str) - strlen($sub)) == $sub);
 }
 
+function trimOffFront($off, $str) {
+    if(is_numeric($off))
+        return substr($str, $off);
+    else
+        return substr($str, strlen($off));
+}
+
 function trimOffEnd($off, $str) {
     if(is_numeric($off))
         return(substr($str, 0, strlen($str) - $off));
     else
         return(substr($str, 0, strlen($str) - strlen($off)));
 }
+
 
 class ModulesManager {
 	private $appManager;
@@ -50,11 +60,17 @@ class ModulesManager {
 	}
 		
 	public function modulesInjector($classType, $varName, $index, $parameterReflection){
-		if (endsWith($classType, 'Module') && $classType != 'Module'){
-			$moduleName = trimOffEnd('Module', $classType);
+		if (beginsWith($classType, '\\')) $classType = trimOffFront('\\', $classType);
+		
+		if (beginsWith($classType, 'AngularPHP\Modules\\') && $classType != 'AngularPHP\Modules\\'){
+			$moduleName = trimOffFront('AngularPHP\Modules\\', $classType);
+			$moduleName = explode('\\', $moduleName);
 			
-			$m = $this->getModule($moduleName, !$parameterReflection->isDefaultValueAvailable());
-			return $m;
+			if (count($moduleName) == 2 && $moduleName[0] === $moduleName[1]){
+				$m = $this->getModule($moduleName[1], !$parameterReflection->isDefaultValueAvailable());
+				return $m;
+			}
+			return false;
 		}
 		return false;
 	}
@@ -150,11 +166,11 @@ class ModulesManager {
 		if ($baseModuleDir !== false) require_once($moduleDir.$baseModuleName.'.module.php');
 		require_once($moduleDir.$moduleName.'.module.php');
 		
+		$moduleType = 'AngularPHP\\Modules\\'.ucfirst($moduleName).'\\'.ucfirst($moduleName);
 		//Creates a Reflection object for that module
-		$moduleReflection = new ReflectionClass(ucfirst($moduleName).'Module');
+		$moduleReflection = new \ReflectionClass($moduleType);
 		//And checks if it inherits the Module class
-		if ($moduleReflection->isSubclassOf('Module') && ($moduleName === $baseModuleName || $baseModuleDir === false || $moduleReflection->isSubclassOf($baseModuleName.'Module'))){
-			$moduleType = $moduleName.'Module';
+		if ($moduleReflection->isSubclassOf('\AngularPHP\Module') && ($moduleName === $baseModuleName || $baseModuleDir === false || $moduleReflection->isSubclassOf('AngularPHP\\Modules\\'.ucfirst($baseModuleName).'\\'.ucfirst($baseModuleName)))){
 			
 			//Creates the module injecting the dependencies
 			$this->modules[$baseModuleName] = $this->appManager->getDependenciesInjector()->injectDependenciesArgsArray(array($moduleType, '__construct'), $args);
@@ -280,7 +296,8 @@ class ModulesManager {
 		require_once(Config::$dirPath.'core\Module.class.php');
 		require_once(Config::$dirPath.'core\DependenciesDeclarator.class.php');
 		
-		$this->appManager->getDependenciesInjector()->registerInjectionProvider('ModulesManager', $this);
+		$this->appManager->getDependenciesInjector()->registerInjectionProvider('AngularPHP\ModulesManager', $this);
 		$this->appManager->getDependenciesInjector()->registerInjectionProvider('Modules', array($this, 'modulesInjector'));
 	}
+
 }

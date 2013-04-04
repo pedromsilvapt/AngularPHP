@@ -1,10 +1,12 @@
 <?php
+namespace AngularPHP\Modules\Pages;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class PagesModule extends Module {
+class Pages extends \AngularPHP\Module {
 	
 	private $pagesDirectories;
 	private $pagesFiles;
@@ -80,7 +82,7 @@ class PagesModule extends Module {
 		require_once($directoryPath.'\\'.ucfirst($pageName).'.page.php');
 		
 		//Creates a reflection class to check on for the resource
-		$pageReflection = new ReflectionClass(ucfirst($pageName).'Page');
+		$pageReflection = new \ReflectionClass(ucfirst($pageName).'Page');
 		if ($pageReflection->isSubclassOf('Page')){
 			//Creates a string with the name of the resource's class
 			$pageType = ucfirst($pageName).'Page';
@@ -109,7 +111,7 @@ class PagesModule extends Module {
 		return(false);
 	}
 
-	public function __construct(ModulesManager $modulesManager, AngularPHP $appManager){
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\AngularPHP $appManager){
 		parent::__construct($modulesManager);
 		$this->appManager = $appManager;
 		
@@ -124,7 +126,7 @@ class PagesModule extends Module {
 		$this->registerPagesDirectory($modulesManager->getModuleDirectory('Pages').'pages\\');
 		
 		//Registers a callback for when Routes is loaded
-		$this->modulesManager->when('Routes', function(RoutesModule $routes){
+		$this->modulesManager->when('Routes', function(\AngularPHP\Modules\Routes\Routes $routes){
 			//Registers the action on routes for 
 			$routes->addAction('requestPage', array($this, 'actionRequestPage'));			
 		});

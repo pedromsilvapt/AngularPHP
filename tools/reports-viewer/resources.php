@@ -6,13 +6,12 @@ require('..\..\core\Config.class.php');
 require('..\..\core\AngularPHP.class.php');
 
 //Starts the Application
-$init = new AngularPHP();
+$init = new AngularPHP\AngularPHP();
 
 //Checks what page the user is seeing
 $init->getModulesManager()->loadModule('UnitsTesting');
 $init->getModulesManager()->loadModule('URI');
 $init->getModulesManager()->loadModule('Routes');
-$init->getModulesManager()->loadModule('Observer');
 
 $routes = $init->getModulesManager()->getModule('Routes');
 $routes->when('reportsList')->doThis(function(){
@@ -30,7 +29,7 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 	$u = $init->getModulesManager()->getModule('UnitsTesting');
 	
 	$u->describe('Modules Manager', function() use ($u){
-		$te = new AngularPHP();
+		$te = new AngularPHP\AngularPHP();
 		$te->getModulesManager()->loadModule('URI');
 		$te->getModulesManager()->loadModule('Routes');
 		$te->getModulesManager()->loadModule('Observer');
@@ -47,7 +46,7 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 	});
 	
 	$u->describe('URI Tests', function() use ($u, $reportID){
-		$te = new AngularPHP();
+		$te = new AngularPHP\AngularPHP();
 		$te->getModulesManager()->loadModule('URI', '/angular-php/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1');
 		$uri = $te->getModulesManager()->getModule('URI');
 		
@@ -62,7 +61,7 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 			$u->expect($uri->getSegment(2))->toBe('seg4');
 		});
 		
-		$te = new AngularPHP();
+		$te = new AngularPHP\AngularPHP();
 		$te->getModulesManager()->loadModule('URI');
 		$uri = $te->getModulesManager()->getModule('URI');
 		
@@ -81,7 +80,7 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 	});
 	
 	$u->describe('Routing Tests', function() use ($u, $init, $debug){
-		$te = new AngularPHP();
+		$te = new AngularPHP\AngularPHP();
 		$te->getModulesManager()->loadModule('URI', '/angular-php/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1');
 		$te->getModulesManager()->loadModule('Routes');
 		$r = $te->getModulesManager()->getModule('Routes');

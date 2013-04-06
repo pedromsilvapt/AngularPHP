@@ -73,19 +73,18 @@ class Pages extends \AngularPHP\Module {
 	}
 	
 	public function requestPage($pageName, $action = null, $params = array()){
-		//Get's the resource's directory and checks if the resource exists
+		//Get's the page's directory and checks if the page exists
 		$directoryPath = $this->getPagePath($pageName);
 		if ($directoryPath === false) return(false);
 		
 		
-		//Includes the file with the resource
+		//Includes the file with the page
 		require_once($directoryPath.'\\'.ucfirst($pageName).'.page.php');
 		
-		//Creates a reflection class to check on for the resource
-		$pageReflection = new \ReflectionClass(ucfirst($pageName).'Page');
-		if ($pageReflection->isSubclassOf('Page')){
-			//Creates a string with the name of the resource's class
-			$pageType = ucfirst($pageName).'Page';
+		//Creates a reflection class to check on for the page
+		$pageType = 'AngularPHP\Modules\Pages\List\\'.ucfirst($pageName);
+		if (is_subclass_of($pageType, '\AngularPHP\Modules\Pages\Page')){
+			//Creates a string with the name of the page's class
 			
 			//Creates the custom parameters array
 			$arr = array(
@@ -93,8 +92,8 @@ class Pages extends \AngularPHP\Module {
 				'params' => $params
 			);
 			
-			//Creates a new object of the resource and passes the parameters
-			$page = $this->appManager->getDependenciesInjector()->injectDependencies(array($pageType, '__construct'), $arr);
+			//Creates a new object of the page and passes the parameters
+			$page = $this->appManager->getDependenciesInjector()->injectDependenciesArgsAssoc(array($pageType, '__construct'), $arr);
 			//If the page can be shown
 			if ($page->canBeShown()){
 				//Executes the default functions

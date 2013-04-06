@@ -167,19 +167,18 @@ class ModulesManager {
 		require_once($moduleDir.$moduleName.'.module.php');
 		
 		$moduleType = 'AngularPHP\\Modules\\'.ucfirst($moduleName).'\\'.ucfirst($moduleName);
-		//Creates a Reflection object for that module
-		$moduleReflection = new \ReflectionClass($moduleType);
-		//And checks if it inherits the Module class
-		if ($moduleReflection->isSubclassOf('\AngularPHP\Module') && ($moduleName === $baseModuleName || $baseModuleDir === false || $moduleReflection->isSubclassOf('AngularPHP\\Modules\\'.ucfirst($baseModuleName).'\\'.ucfirst($baseModuleName)))){
-			
+		$modulesClassS = '\AngularPHP\Module';
+		$baseModuleClassS = 'AngularPHP\\Modules\\'.ucfirst($baseModuleName).'\\'.ucfirst($baseModuleName);
+		if (is_subclass_of($moduleType, $modulesClassS) && ($moduleName === $baseModuleName || $baseModuleDir === false || is_subclass_of($moduleType, $baseModuleClassS))){
 			//Creates the module injecting the dependencies
 			$this->modules[$baseModuleName] = $this->appManager->getDependenciesInjector()->injectDependenciesArgsArray(array($moduleType, '__construct'), $args);
-				
+			
 			//Calls the callbacks that have been waiting for this module
 			$this->refreshModuleCallbacks($baseModuleName);
 				
 			return($this->modules[$baseModuleName]);
 		}
+		
 		return(false);
 	}
 	

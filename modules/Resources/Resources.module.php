@@ -81,9 +81,9 @@ class Resources extends \AngularPHP\Module {
 		
 		//Creates a reflection class to check on for the resource
 		$resourceReflection = new \ReflectionClass(ucfirst($resourceName).'Resource');
-		if ($resourceReflection->isSubclassOf('DefaultResource')){
+		$resourceType = '\AngularPHP\Modules\Resources\List\\'.ucfirst($resourceName);
+		if (is_subclass_of($resourceType, '\AngularPHP\Modules\Resources\DefaultResource')){
 			//Creates a string with the name of the resource's class
-			$resourceType = $resourceName.'Resource';
 			
 			//Maps each of the GET variables to the $actionParams
 			$actionParams = array();
@@ -91,7 +91,7 @@ class Resources extends \AngularPHP\Module {
 				$actionParams[$key] = $value;
 			
 			//Creates a new object of the resource and passes the parameters
-			$resource = $this->appManager->getDependenciesInjector()->injectDependencies(array($resourceType, '__construct'), array(
+			$resource = $this->appManager->getDependenciesInjector()->injectDependenciesArgsAssoc(array($resourceType, '__construct'), array(
 				'requestMethod' => $_SERVER['REQUEST_METHOD'],
 				'globalParams' => $globalParams,
 				'actionParams' => $actionParams)

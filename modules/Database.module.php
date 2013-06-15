@@ -16,29 +16,34 @@ class Database extends \AngularPHP\Module {
 	
 	
 	public function query(){
-		$num_args = func_num_args();
-		if ($num_args == 0){
-			throw new Exception('Query not defined.');
-			exit;
-		}
-		
+		$num_args = func_num_args();	
 		$query = func_get_arg(0);
+		$params = array();
+		
+		for($i=1; $i < $num_args; $i++)
+			$params[] = func_get_arg($i);
+		
+		return $this->queryArr($query, $params);		
+	}
+	
+	public function queryArr($query, $params){
 		$query = str_replace("^", $this->dbPrefix, $query);
 		
 		$query = $this->PDO->prepare($query);
 		
-		for($pass=1; $pass < $num_args; $pass++){
-			if (is_int(func_get_arg($pass))){
-				$query->bindValue($pass, func_get_arg($pass), PDO::PARAM_INT);
-			} else {
-				$query->bindValue($pass, func_get_arg($pass));
-			}
+		$i = 1;
+		foreach($params as $value){
+			if (is_int($value))
+				$query->bindValue($i, $value, \PDO::PARAM_INT);
+			else 
+				$query->bindValue($i, $value);
+			
+			$i++;
 		}
 		
 		$query->execute();
 		
 		return $query;
-		
 	}
 	
 	public function query_raw($querySQL){
@@ -49,16 +54,32 @@ class Database extends \AngularPHP\Module {
 		return($this->PDO->lastInsertId($name));
 	}
 	
-	public function getPDOConnection(){
+	public function getRawConnection(){
 		return $this->PDO;
 	}
-
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, $dbHost, $dbUser, $dbPass, $dbName, $dbPrefix){
+	
+	public function beginTransaction(){
+		$this->PDO->beginTransaction();
+	}
+	
+	public function rollBack(){
+		$this->PDO->rollBack();
+	}
+	
+	public function commit(){
+		$this->PDO->commit();
+	}
+	
+	public function __construct(\AngularPHP\ModulesManager $modulesManager, $dsn, $username = null, $password = null, $dbPrefix){
 		parent::__construct($modulesManager);
-		list(, $this->dbHost, $this->dbUser, $this->dbPass, $this->dbName, $this->dbPrefix) = func_get_args();
+		list(, , $this->dbUser, $this->dbPass, $this->dbPrefix) = func_get_args();
 		
-		$this->PDO = new PDO("mysql:host=".$this->dbHost.";dbname=".$this->dbName."", $this->dbUser, $this->dbPass);
-		$this->PDO->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		if (!isset($username) || !isset($password))
+			$this->PDO = new \PDO($dsn);
+		else
+			$this->PDO = new \PDO($dsn, $this->dbUser, $this->dbPass);
+			
+		$this->PDO->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
 
 }

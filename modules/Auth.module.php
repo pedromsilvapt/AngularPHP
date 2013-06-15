@@ -32,8 +32,8 @@ class Auth extends \AngularPHP\Module {
 				  FROM ^users
 				  WHERE ID = ?
 				  LIMIT 1';
-		$query = $$this->db->query($query, $userID);
-		$data = $query->fetch(PDO::FETCH_ASSOC);
+		$query = $this->db->query($query, $userID);
+		$data = $query->fetch(\PDO::FETCH_ASSOC);
 		
 		$_SESSION['isLoggedIn'] = true;
 		$_SESSION['userID'] = $userID;
@@ -68,7 +68,7 @@ class Auth extends \AngularPHP\Module {
 	}
 	
 	public function isLoggedIn(){
-		if (empty($_SESSION['isLoggedIn']) or $_SESSION['isLoggedIn'] !== true){
+		if (!isset($_SESSION['isLoggedIn']) or $_SESSION['isLoggedIn'] !== true){
 			return(false);
 		} else {
 			return(true);

@@ -88,6 +88,7 @@ class Routes extends \AngularPHP\Module {
 			$this->chainingInfo['currentRoute'] = $gluedSegments;
 			$this->chainingInfo['setName'] = $gluedSegments;
 		} else if ($count > 0){
+			$this->chainingInfo['currentRoute'] = $this->chainingInfo['setName'];
 			$this->routes[$this->chainingInfo['setName']] = Array('segments' => $segments);
 		}
 		
@@ -96,12 +97,12 @@ class Routes extends \AngularPHP\Module {
 	}
 	
 	public function doThis($actions){
-		//Does some parameters validations
+		//Does some parameters validations		
 		if ((!is_array($actions) && !is_callable($actions)) || ($this->chainingInfo['currentRoute'] == '' && !isset($this->chainingInfo['setName']))){
-			return false;
+			return $this;
 		}
 		if (!isset($this->routes[$this->chainingInfo['currentRoute']]) && !isset($this->routes[$this->chainingInfo['setName']])){
-			return false;
+			return $this;
 		}
 		
 		if (is_array($actions)){

@@ -13,7 +13,6 @@ class Permissions extends \AngularPHP\Module {
 	const HAS_ALL = 0;
 	const JUST_ONE = 1;	
 	
-	
 	public static function getDependencies(){
 		return(array('Database'));
 	}
@@ -22,131 +21,144 @@ class Permissions extends \AngularPHP\Module {
 		$this->cachePermissions = array();
 	}
 	
-	public function addPermissionToEntity($entityType, $entitiesID, $permissionsTypes, $forceRecache = false){		
+	public function addPermissionsToEntity($entityType, $entitiesID, $permissionsTypes, $forceRecache = false){			
+		return $this->updatePermissionsOfEntity($entitiesType, $entitiesID, $permissionsTypes, array(), $forceRecache = false);
+	}
+	
+	public function removePermissionsToEntity($entityType, $entitiesID, $permissionsList, $forceRecache = false){	
+		return $this->updatePermissionsOfEntity($entitiesType, $entitiesID, array(), $permissionsTypes, $forceRecache = false);
+	}
+	
+	public function updatePermissionToEntityAssosc($entityType, $entitiesID, $permissionsList, $forceRecache = false){
+		$addPermissions = array();
+		$removePermissions = array();
+		
+		foreach($permissionsList as $permission => $state){
+			if ($state === true)
+				$addPermissions[] = $permission;
+			if ($state === false)
+				$removePermissions[] = $permission;
+		}
+		
+		return $this->updatePermissionsOfEntity($entityType, $entitiesID, $addPermissions, $removePermissions, $forceRecache);
+	}
+	
+	public function updatePermissionsOfEntity($entityType, $entitiesID, $addPermissions, $removePermissions, $forceRecache = false){
 		//Checks the functions params
 		if (is_integer($entitiesID))
 			$entitiesID = array($entitiesID);
 		elseif (!is_array($entitiesID))
 			return(false);
 		
-		if (is_string($permissionsTypes))
-			$permissionsTypes = array($permissionsTypes);
-		elseif (!is_array($permissionsTypes))
+		if (is_string($addPermissions))
+			$addPermissions = array($addPermissions);
+		elseif (!is_array($addPermissions))
+			return(false);
+			
+		if (is_string($removePermissions))
+			$removePermissions = array($removePermissions);
+		elseif (!is_array($removePermissions))
 			return(false);
 		
-		if (!is_string($entitiesType)) return false;
+		if (!is_string($entityType)) return false;
 		
-		$queryParams = array();
-		//Inserts all permissions in each group
-		foreach ($entitiesID as $id){
-			if (!is_integer($id)) continue;
-			
+		//Now add's the permissions
+		if (count($addPermissions) > 0){
 			//Gets the permissions for the current group
-			$currentPermissions = $this->getPermissions($id, $permissionsTypes, $entityType, $forceRecache);
-			
+			$currentPermissions = $this->getPermissions($entityType, $entitiesID, $addPermissions, $forceRecache);
+
+			$queryParams = array();
 			//Begins the construction of the insertion query
 			$sql = 'INSERT INTO ^permissions
 					  (ID_ENTITY, permission_type, entity_type)
 					  VALUES
 					  ';
-			
-			//Add's each permission into the database
-			foreach ($permissionsTypes as $permissionType){					
-				//Checks if the current permission already exists in the specified group
-				if ($currentPermissions[$id][$permissionType] == false){
-					//Builds the query string with the current permission
-					$sql .= '(?, ?, ?")
-							   ';
-					$queryParams[] = $id;
-					$queryParams[] = $permissionType;
-					$queryParams[] = $entityType;
-					//Add's the current permission to the permissions cache of the current group
-					$this->cachePermissions[$entitiesID][$id][$permissionType] = true;
-				}
-			}
-			$query = call_user_func_array(array($this->db, 'query'), array_merge(array($sql), $queryParams));
-		}
-		
-		return(true);
-	}
-	
-	public function removePermissionsToEntity($entityType, $entitiesID, $permissionsList, $forceRecache = false){		
-		//Checks the functions params
-		if (!is_string($entitiesType) || !is_bool($forceRecache))
-			return false;
-		
-		if (is_integer($entitiesID))
-			$entitiesID = Array($entitiesID);
-		elseif (!is_array($entitiesID))
-			return(false);
-		
-		if (is_string($permissionsList))
-			$permissionsList = Array($permissionsList);
-		elseif (!is_array($permissionsList))
-			return(false);
-		
-		
-		//Removes all permissions in each group
-		foreach ($groupsID as $groupID){
-			$removingPermissions = Array();
-			
-			//Gets the permissions for the current group
-			$this->getPermissions($groupID, $permissionsTypes);
-			//Checks if the group exists
-			if (is_integer($groupID)){
-				//Removes each permission into the database
-				foreach ($permissionsTypes as $permissionType){					
+			//Inserts all permissions in each group
+			foreach ($entitiesID as $id){
+				if (!is_integer($id)) continue;				
+				
+				//Add's each permission into the database
+				foreach ($addPermissions as $permissionType){					
 					//Checks if the current permission already exists in the specified group
-					//We may be sure that this particular permission is cached because we checked them all in this list before
-					if ($this->groups[$groupID]['permissions'][$permissionType] == true){
-						//Adds the current permission to the removing permissions list
-						$removingPermissions[] = $permissionType;
-						//Removes the current permission from the permissions cache of the current group
-						$this->groups[$groupID]['permissions'][$permissionType] = false;
+					if ($currentPermissions[$id][$permissionType] == false){
+						//Builds the query string with the current permission
+						$sql .= '(?, ?, ?)
+								   ';
+						$queryParams[] = $id;
+						$queryParams[] = $permissionType;
+						$queryParams[] = $entityType;
+						//Add's the current permission to the permissions cache of the current group
+						$this->cachePermissions[$entityType][$id][$permissionType] = true;
 					}
 				}
-				
+			}
+			if (count($queryParams) > 0)
+				$query = $this->db->queryArr($sql, $queryParams);
+		}
+		
+		if (count($removePermissions) > 0){
+			$removingIDs = array();
+			//Removes all permissions in each group
+			foreach ($entitiesID as $entityID){
+				//Checks if the group exists
+				if (is_integer($entityID))
+					$removingIDs[] = $entityID;
+			}
+			
+			if (count($removingIDs) > 0 && count($removePermissions) > 0){
 				$query = 'DELETE FROM ^permissions
-						  WHERE ID_GROUP = ? and permission_type IN (?)';
-				$query = $this->db->query($query, $groupID, implode(',', $removingPermissions));
+						  WHERE entity_type = ? and ID_ENTITY IN('.\AngularPHP\trimOffEnd(1, str_repeat('?,', count($entitiesID))).') and permission_type IN ('.\AngularPHP\trimOffEnd(1, str_repeat('?,', count($removePermissions))).')';
+				$params = array_merge(array($entityType), $entitiesID, $removePermissions);
+			
+				$query = $this->db->queryArr($query, $params);
 			}
 		}
 		
 		return(true);
 	}
 	
-	public function getPermissions($entitiesType, $entitiesID, $permissionsList, $forceRecache = false){		
+	public function getPermissions($entityType, $entitiesID, $permissionsList, $forceRecache = false){		
 		//Checks the function params
 		if (((!is_integer($entitiesID) && !is_array($entitiesID))) || !is_bool($forceRecache))
 			return(false);
 		if (!is_string($permissionsList) && !is_array($permissionsList))
 			return false;
-		if (!is_string($entitiesType))
+		if (!is_string($entityType))
 			return false;
 		
 		//If the entitiesID is an integer, transforms it into an array
 		if (is_integer($entitiesID))
 			$entitiesID = Array($entitiesID);
 		
+		if (count($entitiesID) == 0) return false;
 		
 		//Transforms the string (if exists) in an array
 		if (is_string($permissionsList))
-			$permissionsList[] = $permissionsList;
+			$permissionsList = array($permissionsList);
 		
 		//Get's permissions already cached
 		$returnedPermissions = Array();
-		$unknownPermissions = $permsList;
+		$unknownPermissions = $permissionsList;
+		$unknownPermissionsCount = array();
 		
 		if ($forceRecache == false){
+			$idsCount = count($entitiesID);
 			//For each input group see's if there is already any information cached
 			foreach ($entitiesID as $id){
 				//If there is any cache for this entity
-				if (isset($this->cachePermissions[$entitiesType][$id])){
+				if (isset($this->cachePermissions[$entityType][$id])){
 					//Goes through all the unkown permissions
 					foreach ($unknownPermissions as $permissionName){
-						if (isset($this->cachePermissions[$entitiesType][$id][$permissionName]) && (empty($returnedPermissions[$permissionName]) or !$returnedPermissions[$permissionName])){
-							$returnedPermissions[$permissionName] = $this->cachePermissions[$entitiesType][$id][$permissionName];
-							unset($unknownPermissions[$permissionName]);
+						if (isset($this->cachePermissions[$entityType][$id][$permissionName]) && (empty($returnedPermissions[$id][$permissionName]) or !$returnedPermissions[$id][$permissionName])){
+							$returnedPermissions[$id][$permissionName] = $this->cachePermissions[$entityType][$id][$permissionName];
+
+							if (isset($unknownPermissionsCount[$permissionName]))
+								$unknownPermissionsCount[$permissionName] += 1;
+							else
+								$unknownPermissionsCount[$permissionName] = 1;
+							
+							if ($unknownPermissionsCount[$permissionName] == $idsCount)
+								unset($unknownPermissions[$permissionName]);
 						}
 					}
 				}
@@ -156,39 +168,44 @@ class Permissions extends \AngularPHP\Module {
 		//See's if there are any permissions unknow yet
 		//If yes, get's them from the database
 		if (count($unknownPermissions) > 0){
-			$query = 'SELECT ID_ENTITY, permission_type, entity_type
+			$sql = 'SELECT ID_ENTITY, permission_type, entity_type
 					  FROM ^permissions
-					  WHERE ID_ENTITY IN ("'.implode('","', $entitiesID).'") and permission_type IN ("'.implode('","', $unknownPermissions).' and entity_type = ?")
+					  WHERE ID_ENTITY IN ('.\AngularPHP\trimOffEnd(1, str_repeat('?,', count($entitiesID))).') AND permission_type IN ('.\AngularPHP\trimOffEnd(1, str_repeat('?,', count($unknownPermissions))).') AND entity_type = ?
 					  ORDER BY permission_type ASC';
-			$query = $this->db->query($query, $entitiesType);
+			//"'.implode('","', $entitiesID).'"
+			$permsParams = array();
+			foreach ($unknownPermissions as $key => $value)
+				$permsParams[] = $value;
+			
+			$query = $this->db->queryArr($sql, array_merge($entitiesID, $permsParams, array($entityType)));
 			$permissions = Array();
 			$permissionsByEntity = Array();
 			
-			while ($row = $query->fetch(PDO::FETCH_ASSOC)){
+			while ($row = $query->fetch(\PDO::FETCH_ASSOC)){
 				$permissions[$row['permission_type']] = true;
-				$permissionsByGroup[$row['ID_ENTITY']][$row['permission_type']] = true;
+				$permissionsByEntity[$row['ID_ENTITY']][$row['permission_type']] = true;
 			}
 			
 			//Checks what permissions the group has or don't
 			foreach($unknownPermissions as $permissionName){
 				//This set of groups has the permission
 				if (isset($permissions[$permissionName])){
-					$returnedPermissions[$permissionName] = true;
 					//So goes through all the groups and checks each one
-					foreach ($groupID as $id){
+					foreach ($entitiesID as $id){
+						$returnedPermissions[$id][$permissionName] = true;
 						//If they have that permission
-						if (isset($permissionsByGroup[$id][$permissionName])){
-							$this->cachePermissions[$entitiesType][$id][$permissionName] = true;
+						if (isset($permissionsByEntity[$id][$permissionName])){
+							$this->cachePermissions[$entityType][$id][$permissionName] = true;
 						//Or not
 						} else {
-							$this->cachePermissions[$entitiesType][$id][$permissionName] = false;
+							$this->cachePermissions[$entityType][$id][$permissionName] = false;
 						}
 					}
 				} else {
-					$returnedPermissions[$permissionName] = false;					
 					//Sets all the groups with false for the permission (none of them had such permission)
-					foreach ($groupID as $id){
-						$this->cachePermissions[$entitiesType][$id][$permissionName] = false;
+					foreach ($entitiesID as $id){
+						$returnedPermissions[$id][$permissionName] = false;					
+						$this->cachePermissions[$entityType][$id][$permissionName] = false;
 					}
 				}
 			}
@@ -286,4 +303,5 @@ class Permissions extends \AngularPHP\Module {
 		parent::__construct($modulesManager);
 		$this->db = $db;
 	}
+
 }

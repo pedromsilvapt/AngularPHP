@@ -147,10 +147,19 @@ class ModulesManager {
 	}
 	
 	
+	public function setType(&$var, $type, $native = false){
+		if (!$native){
+			if ($type == 'boolean' && $var === "false") $var = "";
+		}
+		
+		return settype($var, $type);
+	}
+	
+	
 	private function _loadModuleAs($moduleName, $baseModuleName, $parentCalls, $args = array()){
 		//If the module is already loaded
 		if ($this->isModuleLoaded($moduleName)){
-			return(false);
+			return($this->getModule($moduleName));
 		}
 		//Gets the module's directory
 		$moduleDir = $this->getModuleDirectory($moduleName);
@@ -214,7 +223,7 @@ class ModulesManager {
 		
 		//If it is a string, converts it to an array
 		if (is_string($modules)){
-			$modules = Array($modules);
+			$modules = array($modules);
 		} else {
 			$modules = array_unique($modules);
 		}
@@ -230,7 +239,7 @@ class ModulesManager {
 			if (!$this->isModuleLoaded($module)){
 				//If there isn't any list created for this callback, creates the Array
 				if (empty($missingModules)){
-					$missingModules = Array($module => false);
+					$missingModules = array($module => false);
 				} else {
 					$missingModules[$module] = false;
 				}
@@ -239,7 +248,7 @@ class ModulesManager {
 				if (isset($this->modulesCallbacks[$module])){
 					$this->modulesCallbacks[$module][] = $index;
 				} else {
-					$this->modulesCallbacks[$module] = Array($index);
+					$this->modulesCallbacks[$module] = array($index);
 				}
 			}
 		}
@@ -247,7 +256,7 @@ class ModulesManager {
 		//If there are any modules unloaded
 		if (isset($missingModules)){
 			//Stores the callback in the arrays
-			$this->callbacksModules[$index] = Array(
+			$this->callbacksModules[$index] = array(
 				'missing' => $missingModules,
 				'callback' => $callback
 			);

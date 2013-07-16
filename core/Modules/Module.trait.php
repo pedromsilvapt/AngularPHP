@@ -95,7 +95,7 @@ trait Module {
 	public function parent($pos = 0){
 		if (!is_integer($pos)) $pos = 0;
 		
-		for ($i = $this->_cacheParent + 1; $i <= $pos && $this->parent($pos - 1)->parent(); $i++)
+		for ($i = $this->_cacheParent + 1; $i <= $pos && ($pos > 0 && $this->parent($pos - 1)->parent()); $i++)
 				$this->_parent[$pos] = $this->parent($pos - 1)->parent();
 		
 		if (isset($this->_parent[$pos])) return $this->_parent[$pos];
@@ -352,23 +352,23 @@ trait Module {
 				if (isset($requirements['suffixes'])) {
 				
 				}
-				if (file_exists($eachFolder.'\\'.$moduleName.'\\'.$moduleName.'.'.$eachType.'.php') &&
+				if (file_exists($eachFolder.DIRECTORY_SEPARATOR.$moduleName.DIRECTORY_SEPARATOR.$moduleName.'.'.$eachType.'.php') &&
 					($this->subModulesFileSystem == 2 || $this->subModulesFileSystem == 1)){
 					$return = array(
 						'customFolder' => true,
 						'moduleName' => $moduleName,
 						'moduleType' => $eachType,
-						'folder' => $eachFolder.'\\'.$moduleName,
-						'file' => $eachFolder.'\\'.$moduleName.'\\'.$moduleName.'.'.$eachType.'.php',
+						'folder' => $eachFolder.DIRECTORY_SEPARATOR.$moduleName,
+						'file' => $eachFolder.DIRECTORY_SEPARATOR.$moduleName.DIRECTORY_SEPARATOR.$moduleName.'.'.$eachType.'.php',
 					);
-				} else if (file_exists($eachFolder.'\\'.$moduleName.'.'.$eachType.'.php') &&
+				} else if (file_exists($eachFolder.DIRECTORY_SEPARATOR.$moduleName.'.'.$eachType.'.php') &&
 					($this->subModulesFileSystem == 2 || $this->subModulesFileSystem == 0)){
 					$return = array(
 						'customFolder' => false,
 						'moduleName' => $moduleName,
 						'moduleType' => $eachType,
 						'folder' => $eachFolder,
-						'file' => $eachFolder.'\\'.$moduleName.'.'.$eachType.'.php',
+						'file' => $eachFolder.DIRECTORY_SEPARATOR.$moduleName.'.'.$eachType.'.php',
 					);
 				}
 
@@ -384,7 +384,7 @@ trait Module {
 			foreach($this->subModulesTypes[$eachType]['files'] as $eachFile){
 				$mFN = $moduleName.'.'.$eachType.'.php';
 				//If the filename matches the required filename for a module file and if it exists
-				if (file_exists($eachFile) && endsWith($eachFile, '\\'.$mFN)){
+				if (file_exists($eachFile) && endsWith($eachFile, DIRECTORY_SEPARATOR.$mFN)){
 					//Returns the directory of the file
 					$return = array(
 						'customFolder' => false,

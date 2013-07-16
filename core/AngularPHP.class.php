@@ -9,11 +9,11 @@ if (!defined('APPRUNNING')){
 require('Config.class.php');
 require('Decorator.class.php');
 require('DependencyInjection.class.php');
-require('Configuration\IConfigurable.interface.php');
-require('Configuration\Configurable.trait.php');
-require('Modules\Module.trait.php');
-require('Modules\ModulesManager.class.php');
-require('Modules\DependenciesManager.class.php');
+require('Configuration'.DIRECTORY_SEPARATOR.'IConfigurable.interface.php');
+require('Configuration'.DIRECTORY_SEPARATOR.'Configurable.trait.php');
+require('Modules'.DIRECTORY_SEPARATOR.'Module.trait.php');
+require('Modules'.DIRECTORY_SEPARATOR.'ModulesManager.class.php');
+require('Modules'.DIRECTORY_SEPARATOR.'DependenciesManager.class.php');
 //require('..\Modules\HelperFunctions.php');
 
 class AngularPHP {

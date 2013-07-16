@@ -29,13 +29,13 @@ class Resources {
 		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType, $config);
 		
 		//Includes the DefaultResource class
-		require_once($this->parent()->getModuleSource('Resources', 'Module')['folder'].'\DefaultResource.class.php');
+		require_once($this->parent()->getModuleSource('Resources', 'Module')['folder'].DIRECTORY_SEPARATOR.'DefaultResource.class.php');
 		
 		//Create the Resource type
 		$this->registerModulesType('resource', array($this, 'factoryResource'), array('suffixes' => 'resource', 'subnamespace' => 'Resources', 'subclass' => 'DefaultResource'));
 		
 		//Registers the default resource's directory
-		$this->registerModulesDirectory($this->parent()->getModuleSource('Resources', 'Module')['folder'].'\resources', 'Resource');
+		$this->registerModulesDirectory($this->parent()->getModuleSource('Resources', 'Module')['folder'].DIRECTORY_SEPARATOR.'resources', 'Resource');
 		 //$this->parent()->getModuleSource('Resources', 'Module')['folder'].'\resources ';
 		//Registers a callback for when Routes is loaded
 		$this->when('load', '<$|Routes>', function($routes){

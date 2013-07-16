@@ -79,7 +79,7 @@ class Pages extends \AngularPHP\Module {
 		
 		
 		//Includes the file with the page
-		require_once($directoryPath.'\\'.ucfirst($pageName).'.page.php');
+		require_once($directoryPath.DIRECTORY_SEPARATOR.ucfirst($pageName).'.page.php');
 		
 		//Creates a reflection class to check on for the page
 		$pageType = 'AngularPHP\Modules\Pages\List\\'.ucfirst($pageName);

@@ -19,6 +19,6 @@ class ModulesManager {
 	function __construct($config = array()){
 		$this->__traitConstruct(null, 'ModulesManager', 'modulesManager', 'manager', $config);
 		
-		$this->registerModulesType('module', array($this, 'factoryModule'), ['suffixes' => 'module', 'ownnamespace' => true, 'subnamespace' => 'Modules'], $this->config('io.basePath').'\modules');
+		$this->registerModulesType('module', array($this, 'factoryModule'), ['suffixes' => 'module', 'ownnamespace' => true, 'subnamespace' => 'Modules'], $this->config('io.basePath').DIRECTORY_SEPARATOR.'modules');
 	}
 }

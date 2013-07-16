@@ -6,7 +6,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class Users extends \AngularPHP\Module {
+class Users {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $db;
 	private $cacheState;
@@ -124,7 +127,7 @@ class Users extends \AngularPHP\Module {
 		return $query->rowCount() > 0;
 	}
 	
-		public function createUser($username, $password, $email, $activate, $sendMail){		
+	public function createUser($username, $password, $email, $activate, $sendMail){		
 		//If the variable's types aren't correct, exits the function
 		if (!is_string($username) or !is_string($password) or !is_string($email) or !is_bool($activate) or !is_bool($sendMail))
 			return(false);
@@ -296,13 +299,13 @@ class Users extends \AngularPHP\Module {
 		}
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db){
-		parent::__construct($modulesManager);
-		$this->db = $db;
+	public function __construct($parent, $moduleID, $moduleName, $moduleType){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType);
 		
 		$this->cacheState = $cacheState;
 		$this->cache = Array();
 		$this->users = Array();
+		$this->db = $this->load('Database');	
 	}
 }
 

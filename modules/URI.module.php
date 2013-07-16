@@ -6,7 +6,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class URI extends \AngularPHP\Module {
+class URI {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $uri;
 	private $segments;
@@ -32,7 +35,8 @@ class URI extends \AngularPHP\Module {
 	* @return  string  the uri
 	*/
 	
-	public function calculateURI($uri = null) {
+	public function calculateURI() {
+		$uri = $this->config('custom');
 		if (isset($_SERVER['PATH_INFO']) && $uri === null)
 		{
 			$uri = $_SERVER['PATH_INFO'];
@@ -135,9 +139,10 @@ class URI extends \AngularPHP\Module {
 		}
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, $uri = null){
-		parent::__construct($modulesManager);
-		$this->calculateURI($uri);
+	public function __construct($parent, $moduleID, $moduleName, $moduleType, $config = array()){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType, $config);
+				
+		$this->calculateURI();
 	}
 }
 

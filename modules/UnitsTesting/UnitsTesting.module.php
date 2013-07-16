@@ -5,7 +5,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class UnitsTesting extends \AngularPHP\Module {
+class UnitsTesting {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $_interceptOutput = true;
 	private $_showTrace = false;
@@ -209,10 +212,10 @@ class UnitsTesting extends \AngularPHP\Module {
 		return call_user_func($this->exporters[$formatter], $this->testsResults[$name]);
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager){
-		parent::__construct($modulesManager);
+	public function __construct($parent, $moduleID, $moduleName, $moduleType, $config = array()){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType, $config);
 		
-		require_once($modulesManager->getModuleDirectory('UnitsTesting').'UnitsReport.class.php');
+		require_once($this->parent()->getModuleSource('UnitsTesting', 'Module')['folder'].'\UnitsReport.class.php');
 		
 		$this->registerExporter('html', array($this, 'exporterHTML'));
 		$this->registerExporter('json', array($this, 'exporterJSON'));

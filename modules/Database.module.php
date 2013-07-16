@@ -5,45 +5,35 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class Database extends \AngularPHP\Module {
+class Database {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
-	public $PDO;
-	private $dbHost;
-	private $dbName;
-	private $dbUser;
-	private $dbPass;
-	private $dbPrefix;
+	protected $PDO;
 	
 	
 	public function query(){
-		$num_args = func_num_args();	
+		$num_args = func_num_args();
+		if ($num_args == 0 || !is_string(func_get_arg(0))) throw new Exception('Query not defined.');
+		
 		$query = func_get_arg(0);
-		$params = array();
-		
-		for($i=1; $i < $num_args; $i++)
-			$params[] = func_get_arg($i);
-		
-		return $this->queryArr($query, $params);		
-	}
-	
-	public function queryArr($query, $params){
-		$query = str_replace("^", $this->dbPrefix, $query);
+		$query = str_replace($this->config('parser.prefixPlaceholder'), $this->config('db.tablePrefix'), $query);
 		
 		$query = $this->PDO->prepare($query);
 		
-		$i = 1;
-		foreach($params as $value){
-			if (is_int($value))
-				$query->bindValue($i, $value, \PDO::PARAM_INT);
-			else 
-				$query->bindValue($i, $value);
-			
-			$i++;
+		for($pass=1; $pass < $num_args; $pass++){
+			if (is_int(func_get_arg($pass))){
+				$query->bindValue($pass, func_get_arg($pass), PDO::PARAM_INT);
+			} else {
+				$query->bindValue($pass, func_get_arg($pass));
+			}
 		}
 		
 		$query->execute();
 		
 		return $query;
+		
 	}
 	
 	public function query_raw($querySQL){
@@ -57,32 +47,24 @@ class Database extends \AngularPHP\Module {
 	public function getRawConnection(){
 		return $this->PDO;
 	}
-	
-	public function beginTransaction(){
-		$this->PDO->beginTransaction();
-	}
-	
-	public function rollBack(){
-		$this->PDO->rollBack();
-	}
-	
-	public function commit(){
-		$this->PDO->commit();
-	}
-	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, $dsn, $username = null, $password = null, $dbPrefix){
-		parent::__construct($modulesManager);
-		list(, , $this->dbUser, $this->dbPass, $this->dbPrefix) = func_get_args();
+
+	public function __construct($parent, $moduleID, $moduleName, $moduleType, $config = array()){
+		//Default configurations
+		$this->config(array(
+			'db.errorMode' => \PDO::ERRMODE_EXCEPTION,
+			'parser.prefixPlaceholder' => '^'
+		));
+		//Base constructor for modules
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType, $config);
 		
-		if (!isset($username) || !isset($password))
-			$this->PDO = new \PDO($dsn);
+		//Instantiates the PDO connection
+		if (isset($this->config('db.password')) && isset($this->config('db.username')))
+			$this->PDO = new \PDO($this->config('db.dsn'));
 		else
-			$this->PDO = new \PDO($dsn, $this->dbUser, $this->dbPass);
-			
-		$this->PDO->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+			$this->PDO = new \PDO($this->config('db.dsn'), $this->config('db.username'), $this->config('db.password'));
+		
+		//Sets the error mode attribute
+		$this->PDO->setAttribute(\PDO::ATTR_ERRMODE, $this->config('db.errorMode'));
 	}
 
 }
-
-
-?>

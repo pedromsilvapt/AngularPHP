@@ -6,7 +6,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class Routes extends \AngularPHP\Module {
+class Routes {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $uri;
 	private $routes;
@@ -243,9 +246,10 @@ class Routes extends \AngularPHP\Module {
 		$this->actions[$actionName] = $actionCallback;
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\URI\URI $uri){
-		parent::__construct($modulesManager);
-		$this->uri = $uri;
+	public function __construct($parent, $moduleID, $moduleName, $moduleType){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType);
+		
+		$this->uri = $this->load('URI');
 		$this->routes = Array();
 		$this->defaultRoute = null;
 		$this->actions = Array();

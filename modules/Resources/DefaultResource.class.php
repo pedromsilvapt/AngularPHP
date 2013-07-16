@@ -1,16 +1,32 @@
 <?php
+namespace AngularPHP\Modules\Resources;
+
 //Prevent this file from being requested directly
 if (!defined('APPRUNNING')){
 	exit;
 }
 
-class DefaultResource {
-	protected $modulesManager;
-	protected $resourcesManager;
-	protected $requestMethod;
-	protected $globalParams;
-	protected $actionParams;
+abstract class DefaultResource {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
+	protected $httpErrors = array();
+	
+	private function objectToArray($d) {
+		if (is_object($d)) {
+			// Gets the properties of the given object with get_object_vars function
+			$d = get_object_vars($d);
+		}
+
+		if (is_array($d)) {
+			// Return array converted to object. Using __FUNCTION__ (Magic constant) for recursive call
+			return array_map(array($this, 'objectToArray'), $d);
+		} else {
+			// Return array
+			return $d;
+		}
+	}
 	
 	public function mapActionFunctions(){
 		//Maps each action to the corresponding method and the QueryString to the arguments
@@ -40,14 +56,14 @@ class DefaultResource {
 		$actionName = '';
 		
 		//If no custom action is defined, then the default ones will be assumed
-		if (empty($this->actionParams['action'])){
+		if ($this->config('input.action.action') === null){
 			//The switch chooses the appropriate action based on the Request Method
-			switch($this->requestMethod){
+			switch($this->config('input.method')){
 				case 'POST':
 					$actionName = 'save';
 					break;
 				case 'GET':
-					if (isset($this->actionParams['isArray']) && $this->actionParams['isArray']) $actionName = 'query';
+					if ($this->config('input.action.isArray') !== null && $this->config('input.action.isArray')) $actionName = 'query';
 					else $actionName = 'get';
 					break;
 				case 'DELETE':
@@ -55,7 +71,7 @@ class DefaultResource {
 			}
 		} else {
 			//Otherwise sets the action to the requested one
-			$actionName = $this->actionParams['action'];
+			$actionName = $this->config('input.action.action');
 		}
 		
 		return($actionName);
@@ -64,7 +80,8 @@ class DefaultResource {
 	public function executeRequestedAction(){
 		//Get's and executes the requested action
 		$actionName = $this->getRequestedAction();
-		$this->executeAction($actionName);
+		
+		return $this->executeAction($actionName);
 	}
 	
 	public function executeAction($actionName){
@@ -77,28 +94,65 @@ class DefaultResource {
 		//If there are any custom mapped params to this action, then gets their values
 		if ($this->mapActionFunctions() !== false && $this->mapActionFunctions()[$actionName]['arguments']){
 			//Declares the params array
-			$params = Array();
+			$params = array();
 			//Loops through the mapping arguments
-			foreach($this->mapActionFunctions()[$actionName]['arguments'] as $key){
+			$mappedArguments = $this->mapActionFunctions()[$actionName]['arguments'];
+			foreach($this->mapActionFunctions()[$actionName]['arguments'] as $value){
+				unset($var);
+				unset($default);
+				unset($type);
+				$hasDefault = false;
+				if (is_array($value)) { 
+					$var = $value[0];
+					$default = $value[1];
+					$hasDefault = true;
+					if (isset($value[2])) $type = $value[2];
+				}
+				else $var = $value;
 				//Checks if the arguments are declared, and if so save them
-				if (isset($this->globalParams[$key])) $params[] = $this->globalParams[$key];
-				else if (isset($this->actionParams[$key])) $params[] = $this->actionParams[$key];
+				if (isset($this->globalParams[$var])) $value = $this->globalParams[$var];
+				else if (isset($this->actionParams[$var])) $value = $this->actionParams[$var];
 				//Otherwise exits the function
-				else return;
+				else {
+					if ($hasDefault) $value = $default;
+					else return array($var);
+				}
+				if (isset($type)) $this->modulesManager->setType($value, $type);
+				$params[] = $value;
 			}
 			//Calls the requested action's method with it's parameters
-			call_user_func_array(array($this, $methodName), $params);
+			return call_user_func_array(array($this, $methodName), $params);
 		} else {
-			call_user_func(array($this, $methodName));
+			return call_user_func(array($this, $methodName));
 		}
 	}
 	
-	public function __construct(ModulesManager $modulesManager, ResourcesModule $resourcesManager, $requestMethod, $globalParams, $actionParams){
-		//Makes some initializations and set's some values
-		$this->modulesManager = $modulesManager;
-		$this->resourcesManager = $resourcesManager;
-		$this->requestMethod = $requestMethod;
-		$this->globalParams = $globalParams;
-		$this->actionParams = $actionParams;
+	public function __construct($parent, $moduleID, $moduleName, $moduleType, $config = array()){				
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType, $config);
+		//Default configurations
+		//Maps each of the GET variables to the $actionParams
+		if ($this->config('input.action') === null){
+			$action = array();
+			foreach($_GET as $key => $value)
+				$action[$key] = $value;
+			
+			$this->config(array('input.action' => $action));
+		}
+		//Put's the URL information
+		if ($this->config('input.global') === null){
+			$this->di->uri = '*|URI';
+			$this->config(array('input.global' => $this->di->uri->getSegments()));
+		}
+		//Creates the data array
+		if ($this->config('input.data') === null){
+			$data = file_get_contents("php://input");
+			$data = $this->objectToArray(json_decode($data));
+			if (empty($data)) $data = array();
+			$this->config(array('input.data' => $data));
+		}
+		//Set's the default request method
+		if ($this->config('input.requestMethod') === null) $this->config(array('input.requestMethod' => $_SERVER['REQUEST_METHOD']));
+		
+		//$this->addHTTPError(404	);
 	}
 }

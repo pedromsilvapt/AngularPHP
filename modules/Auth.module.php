@@ -6,7 +6,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class Auth extends \AngularPHP\Module {
+class Auth {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $db;
 	
@@ -32,8 +35,8 @@ class Auth extends \AngularPHP\Module {
 				  FROM ^users
 				  WHERE ID = ?
 				  LIMIT 1';
-		$query = $this->db->query($query, $userID);
-		$data = $query->fetch(\PDO::FETCH_ASSOC);
+		$query = $$this->db->query($query, $userID);
+		$data = $query->fetch(PDO::FETCH_ASSOC);
 		
 		$_SESSION['isLoggedIn'] = true;
 		$_SESSION['userID'] = $userID;
@@ -68,16 +71,18 @@ class Auth extends \AngularPHP\Module {
 	}
 	
 	public function isLoggedIn(){
-		if (!isset($_SESSION['isLoggedIn']) or $_SESSION['isLoggedIn'] !== true){
+		if (empty($_SESSION['isLoggedIn']) or $_SESSION['isLoggedIn'] !== true){
 			return(false);
 		} else {
 			return(true);
 		}
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager, \AngularPHP\Modules\Database\Database $db){
-		parent::__construct($modulesManager);
-		$this->db = $db;
+	
+	public function __construct($parent, $moduleID, $moduleName, $moduleType){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType);
+		
+		$this->db = $this->load('Database');
 	}
 }
 

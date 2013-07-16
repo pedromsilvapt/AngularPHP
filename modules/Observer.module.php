@@ -6,7 +6,10 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
-class Observer extends \AngularPHP\Module {
+class Observer {
+	use \AngularPHP\Module {
+		\AngularPHP\Module::__construct as private __traitConstruct;
+	}
 	
 	private $observing;
 	private $config = array(
@@ -130,12 +133,13 @@ class Observer extends \AngularPHP\Module {
 		}
 	}
 	
-	public function __construct(\AngularPHP\ModulesManager $modulesManager){
-		parent::__construct($modulesManager);
+	public function __construct($parent, $moduleID, $moduleName, $moduleType){
+		$this->__traitConstruct($parent, $moduleID, $moduleName, $moduleType);
+	
 		$this->observing = Array();
 		
 		//Adds the main actions
-		$this->modulesManager->when('Routes', function(\AngularPHP\Modules\Routes\Routes $Routes){
+		$this->when('load', '<$|Routes>', function($Routes){
 			$Routes->addAction('notify', array($this, 'actionNotify'));
 		});
 	}

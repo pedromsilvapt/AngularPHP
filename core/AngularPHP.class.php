@@ -6,21 +6,27 @@ if (!defined('APPRUNNING')){
 	exit;
 }
 
+require('Config.class.php');
 require(Config::$dirPath.'core\Decorator.class.php');
 require(Config::$dirPath.'core\DependencyInjection.class.php');
-require(Config::$dirPath.'core\ModulesManager.class.php');
+require(Config::$dirPath.'core\Configuration\IConfigurable.interface.php');
+require(Config::$dirPath.'core\Configuration\Configurable.trait.php');
+require(Config::$dirPath.'core\Modules\Module.trait.php');
+require(Config::$dirPath.'core\Modules\ModulesManager.class.php');
+require(Config::$dirPath.'core\Modules\DependenciesManager.class.php');
+require(Config::$dirPath.'modules\HelperFunctions.php');
 
 class AngularPHP {
 	
-	private $modulesManager;
+	private $_modulesManager;
 	private $dependencyInjector;
 	
 	public function getDependenciesInjector(){
 		return $this->dependencyInjector;
 	}
 	
-	public function getModulesManager(){
-		return($this->modulesManager);
+	public function modulesManager(){
+		return($this->_modulesManager);
 	}
 	
 	public function execute($params, $function = null){
@@ -38,7 +44,7 @@ class AngularPHP {
 		$this->dependencyInjector->registerInjectionProvider('AngularPHP\AngularPHP', $this);
 		
 		//Loads the ModulesManager class
-		$this->modulesManager = new ModulesManager($this);
+		$this->_modulesManager = new ModulesManager($this);
 	}
 }
 ?>

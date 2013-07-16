@@ -14,11 +14,15 @@ class Config
 	public static $dbHost = '127.0.0.1';
 	public static $dbUser = 'root';
 	public static $dbPass = '';
-	public static $dbName = 'assiduidade';
-	public static $dbPrefix = 'as_';
+	public static $dbName = 'gamedevelopment';
+	public static $dbPrefix = 'gd_';
 
 	//Directory Settings
-	public static $dirPath = 'C:\wamp\www\angular-php\\';
-	public static $httpPath = 'http://localhost/angular-php';
+	public static $dirPath = 'C:\wamp\www\angular-php2\\';
+	public static $httpPath = 'http://localhost/angular-php2';
+
+	//Custom settings
+	public static $sitename = 'Game Development';
+	public static $slogan = 'Made Easy';
 }
 

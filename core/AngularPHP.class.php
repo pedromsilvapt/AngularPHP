@@ -7,16 +7,17 @@ if (!defined('APPRUNNING')){
 }
 
 require('Config.class.php');
-require(Config::$dirPath.'core\Decorator.class.php');
-require(Config::$dirPath.'core\DependencyInjection.class.php');
-require(Config::$dirPath.'core\Configuration\IConfigurable.interface.php');
-require(Config::$dirPath.'core\Configuration\Configurable.trait.php');
-require(Config::$dirPath.'core\Modules\Module.trait.php');
-require(Config::$dirPath.'core\Modules\ModulesManager.class.php');
-require(Config::$dirPath.'core\Modules\DependenciesManager.class.php');
-require(Config::$dirPath.'modules\HelperFunctions.php');
+require('Decorator.class.php');
+require('DependencyInjection.class.php');
+require('Configuration\IConfigurable.interface.php');
+require('Configuration\Configurable.trait.php');
+require('Modules\Module.trait.php');
+require('Modules\ModulesManager.class.php');
+require('Modules\DependenciesManager.class.php');
+//require('..\Modules\HelperFunctions.php');
 
 class AngularPHP {
+	use Configurable;
 	
 	private $_modulesManager;
 	private $dependencyInjector;
@@ -44,7 +45,7 @@ class AngularPHP {
 		$this->dependencyInjector->registerInjectionProvider('AngularPHP\AngularPHP', $this);
 		
 		//Loads the ModulesManager class
-		$this->_modulesManager = new ModulesManager($this);
+		$this->_modulesManager = new ModulesManager(array('io.basePath' => dirname(__DIR__)));
 	}
 }
 ?>

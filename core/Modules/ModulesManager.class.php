@@ -16,9 +16,9 @@ class ModulesManager {
 		return $temp;
 	}
 	
-	function __construct(){
-		$this->__traitConstruct(null, 'ModulesManager', 'manager');
+	function __construct($config = array()){
+		$this->__traitConstruct(null, 'ModulesManager', 'modulesManager', 'manager', $config);
 		
-		$this->registerModulesType('module', array($this, 'factoryModule'), ['suffixes' => 'module', 'ownnamespace' => true, 'subnamespace' => 'Modules'], 'C:\wamp\www\angular-php2\modules');
+		$this->registerModulesType('module', array($this, 'factoryModule'), ['suffixes' => 'module', 'ownnamespace' => true, 'subnamespace' => 'Modules'], $this->config('io.basePath').'\modules');
 	}
 }

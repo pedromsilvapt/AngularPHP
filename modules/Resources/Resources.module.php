@@ -12,7 +12,7 @@ class Resources {
 	}
 	
 	public function actionActivateResource($params, $resourceName){
-		$resource = $this->load($resourceName, 'Resource', array('input.url' => $params));
+		$resource = $this->load('/'.$resourceName, 'Resource', array('input.url' => $params));
 		echo $this->encodeOutput($resource->executeRequestedAction());
 	}
 	

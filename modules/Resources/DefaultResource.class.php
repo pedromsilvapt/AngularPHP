@@ -58,7 +58,7 @@ abstract class DefaultResource {
 		//If no custom action is defined, then the default ones will be assumed
 		if ($this->config('input.action.action') === null){
 			//The switch chooses the appropriate action based on the Request Method
-			switch($this->config('input.method')){
+			switch($this->config('input.requestMethod')){
 				case 'POST':
 					$actionName = 'save';
 					break;
@@ -110,14 +110,14 @@ abstract class DefaultResource {
 				}
 				else $var = $value;
 				//Checks if the arguments are declared, and if so save them
-				if (isset($this->globalParams[$var])) $value = $this->globalParams[$var];
-				else if (isset($this->actionParams[$var])) $value = $this->actionParams[$var];
+				if (isset($this->config('input.url')[$var])) $value = $this->config('input.url')[$var];
+				else if (isset($this->config('input.action')[$var])) $value = $this->config('input.action')[$var];
 				//Otherwise exits the function
 				else {
 					if ($hasDefault) $value = $default;
 					else return array($var);
 				}
-				if (isset($type)) $this->modulesManager->setType($value, $type);
+				if (isset($type)) $this->root()->setType($value, $type);
 				$params[] = $value;
 			}
 			//Calls the requested action's method with it's parameters
@@ -139,9 +139,9 @@ abstract class DefaultResource {
 			$this->config(array('input.action' => $action));
 		}
 		//Put's the URL information
-		if ($this->config('input.global') === null){
+		if ($this->config('input.url') === null){
 			$this->di->uri = '*|URI';
-			$this->config(array('input.global' => $this->di->uri->getSegments()));
+			$this->config(array('input.url' => $this->di->uri->getSegments()));
 		}
 		//Creates the data array
 		if ($this->config('input.data') === null){

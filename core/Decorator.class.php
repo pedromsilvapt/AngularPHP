@@ -171,25 +171,17 @@ class Decorator {
 	
 	public function __call($name, $arguments){
 		$callback = $this->getDecorationCallback($name);
-		if ($callback !== false){
-			if ($callback['injectThis']) {
-				$closure = $callback['callback']->bindTo($this, $this);
-				return call_user_func_array($closure, $arguments);
-			} else return call_user_func_array($callback['callback'], $arguments);
-		}
+		if ($callback !== false)
+			return call_user_func_array($callback['callback'], $arguments);
 		
 		throw new \Exception('Calling to not static decorated method "'.$name.'" in object "'.get_called_class().'"', 404);
 	}
 	
 	public static function __callStatic($name, $arguments){
 		$callback = static::getSaticDecorationCallback($name);
-		if ($callback !== false){
-			if ($callback['injectThis']) {
-				$closure = $callback['callback']->bindTo($this, $this);
-				return call_user_func_array($closure, $arguments);
-			} else return call_user_func_array($callback['callback'], $arguments);
-		}
-		
+		if ($callback !== false)
+			return call_user_func_array($callback['callback'], $arguments);
+			
 		throw new \Exception('Calling to not static decorated method "'.$name.'" in object "'.get_called_class().'"', 404);
 	}
 

@@ -15,8 +15,10 @@
 					<td>{{dump(expectation.input)}}</td>
 					<td ng-hide="expectation.negate">{{dump(expectation.expectation)}}</td>
 					<td ng-show="expectation.negate"><span style="font-weight: bold; color: #FF0000;">&#8800;</span> {{dump(expectation.expectation)}}</td>
-					<td class="passed-background" ng-show="expectation.result">Passed</td>
-					<td class="failed-background" ng-hide="expectation.result">Failed</td>
+					<td ng-class="{'passed-background': expectation.result, 'failed-background': !(expectation.result)}">
+						<span ng-show="expectation.result">Passed</span>
+						<span ng-show="!expectation.result">Failed</span>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -65,11 +67,15 @@
 			</tr>
 			<tr ng-hide="isSetCollapsed(item.name)" ng-repeat="subItem in item.children  | orderBy: number">
 				<td style="width: 5%; text-align: right; font-weight: bold;">{{subItem.number}}</td>
-				<td>{{subItem.name}}</td>
+				<td>it <i>{{subItem.name}}</i></td>
 				<td ng-show="!report[item.name]['tests'][subItem.name].output" class=""></td>
 				<td ng-hide="!report[item.name]['tests'][subItem.name].output" ng-click="setOutputTest(item.name, subItem.name)" data-toggle="modal" data-target="#testOutputDialog" class="clickable output-background"><i class=" icon-info-sign icon-white"> </i></td>
-				<td ng-click="setDetails(item.name, subItem.name)" data-toggle="modal" data-target="#testDetailsDialog" class="status passed-background clickable" ng-show="report[item.name]['tests'][subItem.name].passed">Passed</td>
-				<td ng-click="setDetails(item.name, subItem.name)" data-toggle="modal" data-target="#testDetailsDialog" class="status failed-background clickable" ng-hide="report[item.name]['tests'][subItem.name].passed">Failed</td>
+				<td ng-click="setDetails(item.name, subItem.name)" data-toggle="modal" data-target="#testDetailsDialog" class="status clickable"
+					ng-class="{'passed-background': report[item.name]['tests'][subItem.name].passed, 'failed-background': !(report[item.name]['tests'][subItem.name].passed), 'running-background': running}">
+					<span ng-show="report[item.name]['tests'][subItem.name].passed && !running">Passed</span>
+					<span ng-show="!report[item.name]['tests'][subItem.name].passed && !running">Failed</span>
+					<span ng-show="running">Testing</span>
+				</td>
 			</tr>
 		</tbody>
 	</table>

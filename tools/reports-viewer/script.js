@@ -95,12 +95,12 @@ var app = angular.module('TestApp', ['ngResource']);
  
  app.config(['$routeProvider', function($routeProvider) {
 	$routeProvider.when("/home", {
-		templateUrl: 'partial/home.html'
+		templateUrl: 'partial/home.php'
 	}).when("/report/:reportID", {
-		templateUrl: 'partial/report.html', 
+		templateUrl: 'partial/report.php', 
 		controller: ReportController
 	}).when("/help", {
-		templateUrl: 'partial/help.html'
+		templateUrl: 'partial/help.php'
 	}).otherwise({
 		redirectTo: "/home"
 	});
@@ -118,7 +118,7 @@ function ReportController($scope, $resource, $routeParams){
 	
 	var Report = $resource('resources.php/report/:reportID', {reportID: '@id'}, {});
 	$scope.report;
-	$scope.reportUI = {};
+	$scope.reportUI = {running: false};
 	$scope.details = {};
 	$scope.outputDialog = {};
 	$scope.reportArray = [];
@@ -158,7 +158,9 @@ function ReportController($scope, $resource, $routeParams){
 				}, subArray);
 				this.push({name: key, number: value.number, children: subArray});
 			}, $scope.reportArray);
+			$scope.running = false;
 		});
+		$scope.running = true;
 	}
 	
 	$scope.anyErrors = function(){

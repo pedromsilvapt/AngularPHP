@@ -36,6 +36,14 @@
 				vertical-align: middle !important;
 			}
 			
+			.running-background {
+				background-color: #B3B3B3 !important;
+				color: #FFFFFF;
+				font-weight: 700;
+				text-align: center !important;
+				vertical-align: middle !important;
+			}
+			
 			.output-background {
 				background-color: #0088FF;
 				color: #FFFFFF;

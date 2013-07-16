@@ -2,18 +2,17 @@
 session_start();
 define('APPRUNNING', true);
 
-require('..\..\core\Config.class.php');
 require('..\..\core\AngularPHP.class.php');
 
 //Starts the Application
 $init = new AngularPHP\AngularPHP();
 
 //Checks what page the user is seeing
-$init->getModulesManager()->loadModule('UnitsTesting');
-$init->getModulesManager()->loadModule('URI');
-$init->getModulesManager()->loadModule('Routes');
+$init->modulesManager()->load('UnitsTesting');
+$init->modulesManager()->load('URI');
+$init->modulesManager()->load('Routes');
 
-$routes = $init->getModulesManager()->getModule('Routes');
+$routes = $init->modulesManager()->load('Routes');
 $routes->when('reportsList')->doThis(function(){
 	$reportsList = array('list' => array());
 	$reportsList['list'][0] = array('id' => 0, 'title' => 'Just some test\'s test');
@@ -24,31 +23,49 @@ $routes->when('reportsList')->doThis(function(){
 	echo json_encode($reportsList);
 });
 
-$debug = array();
-$routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $debug){
-	$u = $init->getModulesManager()->getModule('UnitsTesting');
+$routes->when('report', ':reportID')->doThis(function($reportID) use ($init){
+	$u = $init->modulesManager()->load('UnitsTesting');
 	
 	$u->describe('Modules Manager', function() use ($u){
 		$te = new AngularPHP\AngularPHP();
-		$te->getModulesManager()->loadModule('URI');
-		$te->getModulesManager()->loadModule('Routes');
-		$te->getModulesManager()->loadModule('Observer');
+		$te->modulesManager()->load('URI');
+		$te->modulesManager()->load('Routes');
+		$te->modulesManager()->load('Observer');
 		
 		$u->it('should load 3 modules', function() use ($u, $te){
-			$u->expect($te->getModulesManager()->isModuleLoaded('URI'))->toBe(true);
-			$u->expect($te->getModulesManager()->isModuleLoaded('Routes'))->toBe(true);
-			$u->expect($te->getModulesManager()->isModuleLoaded('Observer'))->toBe(true);
-			$u->expect($te->getModulesManager()->isModuleLoaded('UnitsTesting'))->toBe(false);
+			$u->expect($te->modulesManager()->isModuleLoaded('URI'))->toBe(true);
+			$u->expect($te->modulesManager()->isModuleLoaded('Routes'))->toBe(true);
+			$u->expect($te->modulesManager()->isModuleLoaded('Observer'))->toBe(true);
+			$u->expect($te->modulesManager()->isModuleLoaded('UnitsTesting'))->toBe(false);
+			$u->expect(count($te->modulesManager()->load('')))->toBe(3);
 		});
 		$u->it('should not have the UnitsTesting module loaded', function() use ($u, $te){
-			$u->expect($te->getModulesManager()->isModuleLoaded('UnitsTesting'))->toBe(false);
+			$u->expect($te->modulesManager()->isModuleLoaded('UnitsTesting'))->toBe(false);
+		});
+		
+		$u->it('should load and unload one module fine', function() use ($u, $te){
+			$te->modulesManager()->load('UnitsTesting');
+			$u->expect($te->modulesManager()->isModuleLoaded('UnitsTesting'))->toBe(true);
+			$te->modulesManager()->unload('UnitsTesting');
+			$u->expect($te->modulesManager()->isModuleLoaded('UnitsTesting'))->toBe(false);
+		});
+		
+		$u->it('should configurate correctly the modules', function() use ($u, $te){
+			$uri = $te->modulesManager()->load('URI');
+			$uri->config(array('io.path' => 'C:'));
+			$u->expect($uri->config('io.path'))->toBe('C:');
+			$u->expect($uri->config(array('io.path')))->toBe('C:');
+			$u->expect($uri->config(array('io.path', 'io.folder' => 'documents')))->toBe('C:');
+			$u->expect($uri->config(array('io.folder')))->toBe('documents');
+			$u->expect($uri->config(array('io.path')))->toBe('C:');
+			$u->expect(count($uri->config(array('io.path', 'io.folder'))['io']))->toBe(2);
 		});
 	});
 	
 	$u->describe('URI Tests', function() use ($u, $reportID){
 		$te = new AngularPHP\AngularPHP();
-		$te->getModulesManager()->loadModule('URI', '/angular-php/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1');
-		$uri = $te->getModulesManager()->getModule('URI');
+		$te->modulesManager()->load('URI', 'Module', array('custom' => '/angular-php2/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1'));
+		$uri = $te->modulesManager()->load('URI');
 		
 		$u->it('should parse the url correctly with one given', function() use ($u, $uri){
 			$u->expect($uri->getURI())->toBe('seg1/seg2/seg4');
@@ -62,8 +79,8 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 		});
 		
 		$te = new AngularPHP\AngularPHP();
-		$te->getModulesManager()->loadModule('URI');
-		$uri = $te->getModulesManager()->getModule('URI');
+		$te->modulesManager()->load('URI');
+		$uri = $te->modulesManager()->load('URI', 'Module');
 		
 		$u->it('should parse the url correctly when none is given', function() use ($u, $uri, $reportID){
 			$u->expect($uri->getURI())->toBe('report/'.$reportID);
@@ -79,18 +96,18 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 		});
 	});
 	
-	$u->describe('Routing Tests', function() use ($u, $init, $debug){
+	$u->describe('Routing Tests', function() use ($u, $init){
 		$te = new AngularPHP\AngularPHP();
-		$te->getModulesManager()->loadModule('URI', '/angular-php/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1');
-		$te->getModulesManager()->loadModule('Routes');
-		$r = $te->getModulesManager()->getModule('Routes');
+		$te->modulesManager()->load('URI', 'Module', array('custom' => '/angular-php/tools/reports-viewer/resources.php/seg1/seg2/seg4?ola=1'));
+		$te->modulesManager()->load('Routes', 'Module');
+		$r = $te->modulesManager()->load('Routes', 'Module');
 		
-		$debug['route'] = 0;
-		$r->when('seg1', ':seg2', 'seg4')->doThis(function($seg2) use ($u, $debug){
+		$debug = array('route' => 0);
+		$r->when('seg1', ':seg2', 'seg4')->doThis(function($seg2) use (&$debug){
 			$debug['route'] = 1;
-		})->when('seg1', 'seg2', 'seg3')->doThis(function() use ($debug){
+		})->when('seg1', 'seg2', 'seg3')->doThis(function() use (&$debug){
 			$debug['route'] = 2;		
-		})->when('seg1', 'seg4', ':seg3', ':seg5')->doThis(function($seg3, $seg5) use ($debug){
+		})->when('seg1', 'seg4', ':seg3', ':seg5')->doThis(function($seg3, $seg5) use (&$debug){
 			$debug['route'] = 3;
 		})->set('link1')->when('hard', ':var1')->doThis(function($var1){
 			
@@ -101,8 +118,7 @@ $routes->when('report', ':reportID')->doThis(function($reportID) use ($init, $de
 		})->go();
 		
 		
-		$u->it('should detect the correct route', function() use ($u, $r, $debug){
-			//echo $debug['route'];
+		$u->it('should detect the correct route', function() use ($u, $r, &$debug){
 			$u->expect($debug['route'])->toBe(1);
 		});
 		$u->it('should output correct links', function() use ($u, $r){
